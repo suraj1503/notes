@@ -1,0 +1,445 @@
+Hoisting: 
+    - Hoisting is the registration of variables and functions in memory during the creation phase of execution context.
+    - Functions declared using `function` keyword are hoisted entirely (both name and body).
+    - `var` variables are hoisted but initialized with `undefined`.
+    - `let` and `const` are hoisted but kept in a "Temporal Dead Zone" (TDZ), so they cannot be accessed before declaration.
+
+libuv: (IMPORTANT)
+    - Libuv is a C++ library that provides Node.js with its non-blocking I/O functionality. 
+    - Offloading slow operations to the OS or thread pool.
+    - Letting the main thread keep running other code.
+    - libuv creates a thread pool (default: 4 threads)
+
+    # Note:
+        - UV_THREADPOOL_SIZE=16 (to set size of thread pool and do that in environment variable) 
+
+Error handling:
+    - Error handling in asynchronous callbacks is a technique
+    - where errors are passed as the first argument to the callback function,
+    - and Second argument is the successful result data.
+    - In case of error, the first argument will be null and the second argument will be undefined.
+
+    - Eg. (code Snippet):
+        const fs = require("fs");
+
+        fs.readFile("file.txt", "utf8", function(err, data) {
+        if (err) {
+            console.error("Failed to read file:", err.message);
+            return;
+        }
+        console.log("File content:", data);
+        });
+
+Event Emitter:
+    - EventEmitter is a class in Node.js that enables event-driven programming. 
+      It allows objects to emit events and other parts of the program to listen and react to those events.
+    - It follows the publish–subscribe (pub/sub) pattern:
+        Emitter → publishes event
+        Listener → subscribes to event
+    - Code Snippet:
+        const EventEmitter = require('events');
+        const emitter = new EventEmitter();
+        // listener (subscriber)
+        emitter.on('greet', (name) => {
+            console.log(`Hello ${name}`);
+        });
+        // emitter (publisher)
+        emitter.emit('greet', 'Suraj');
+    - 
+
+EventDriven Architecture (EDA):
+    - Event-Driven Architecture (EDA) is a distributed system design pattern where services communicate by producing and consuming events, instead of calling each other directly (like REST).
+    - Node.js fits this well because it uses an event-driven model—events are emitted, and listeners react asynchronously.
+    - An event = something that already happened
+    - Examples: order_created
+    - Key characteristics:
+        - loosely coupled → no direct dependency
+        - asynchronous 
+        - scalable
+
+    - Example:
+        const fs = require("fs");
+
+        const stream = fs.createReadStream("./automator-mobile-agent.txt", {
+            highWaterMark: 1024 // chunk size in bytes
+        });
+        var i = 0
+        stream.on("data", (chunk) => {
+            console.log("Received chunk:", ++i);
+        });
+        console.log("stream: ", i);
+
+Phases in Event Loop:  (and each phases has there on queue)
+    #1. Timers → Checks if it’s time for setInterval / setTimeout
+    #2. Pending Callbacks → executes I/O callbacks deferred to the next loop iteration
+    #3. Idle, Prepare → Internal Node.js use only
+    #4. Poll → Reads I/O events (network, file system)
+    #5. Check → Executes setImmediate
+    #6. Close → Handles close events
+
+    Note:
+        - "Poll" phase is the "main" phase.
+        - complete phase 1 round is called as 1 cycle / 1 tick
+        - before every phases of event loop, it executes microtasks (like process.nextTick, promise.then)..
+        - The event loop keeps running as long as there are active timers, I/O operations, or event listeners.
+        - Sometimes output can vary based on I/O operations (poll phase callbacks).
+        - (if ,poll phase is delayed because of some heavy I/O operation) has immediate callback and before that I have immediate callback then check phase execution skips poll phase.
+
+
+Key concept to know before learning cluster, worker_threads, child_process:
+    #CPU and Core (Hardware Level):
+        - CPU (Processor):
+            * The physical chip in your machine
+            * Example: Intel i7, AMD Ryzen
+        - Core:   
+            * A CPU contains multiple cores
+            * Each core can execute instructions independently
+        - Example: 1 CPU with 8 cores = can run 8 things in parallel (true parallelism)
+    
+    #Program (Passive):
+        - What is a Program?
+            * A file on disk, just instructions, not running
+        - Example: 
+            node app.js --> app.js is a program
+
+    #Process (Active Execution):
+        - What is a Process?
+            * A running instance of a program
+            * Has:
+                Memory (heap, stack)
+                Resources (file handles, network)
+                Own execution environment
+        - When you run: node app.js --> OS creates a process
+        - Important: 
+            * Each process is independent
+            * Memory is NOT shared
+
+    #Thread (Inside a Process)
+        - What is a Thread?
+            * A unit of execution inside a process
+            * A process can have:
+                One thread (single-threaded)
+                Multiple threads (multi-threaded)
+        - Key concept:
+            * Threads:
+                Share the same memory of the process
+                Run independently
+
+    #How They Connect (Full Flow)
+        CPU (hardware)
+        ↓
+        Cores (execution units)
+        ↓
+        Process (running program)
+        ↓
+        Threads (execution inside process)
+
+    #Mental Model
+        Machine
+        └── CPU
+            └── Cores
+                └── Processes (Node apps)
+                        └── Threads (worker threads)
+
+Worker Threads(Multithreading in Node.js):
+    - worker_threads allows you to run JavaScript in multiple threads within the same process.
+    - Worker threads add true parallel CPU execution.
+    - How it works:
+        * You create a worker using new Worker()
+        * Each worker runs in a separate thread
+        * All threads belong to same process
+
+    - Code Snippet:
+        const { Worker } = require('worker_threads');
+        const worker = new Worker('./worker.js', {
+            workerData: 10
+        });
+        worker.on('message', (result) => {
+            console.log(result);
+        });
+
+    - Memory behavior:
+        * Each worker has its own JS heap
+        * BUT you can share memory using:
+            SharedArrayBuffer
+            Atomics
+        * Default → No shared memory
+        * Advanced → Shared memory possible
+    
+    - Communication:
+        * Message passing (postMessage)
+        * Shared memory (advanced)
+
+    - When to use
+        * CPU-intensive tasks: Image processing, Video encoding, Heavy calculations
+
+Child Process (Process-based parallelism):
+    - child_process allows you to spawn completely separate processes.
+    - Each child: Has its own memory,Has its own event loop, Runs independently
+    - Types of child processes:
+        const { fork, spawn, exec } = require('child_process');
+        * fork() → for Node.js scripts
+        * spawn() → for streaming large data
+        * exec() → for running shell commands
+    
+    - Code Snippet:
+        const { fork } = require('child_process');
+        const child = fork('child.js');
+        child.send("Hello");
+        child.on('message', (msg) => {
+            console.log(msg);
+        });
+
+    - Memory behavior:
+        * No shared memory
+        * Each process has its own heap
+        * Communication is via IPC (Inter-Process Communication)
+
+    - When to use:
+        * Running external programs
+        * Isolation (crash safety)
+        * Heavy tasks where isolation matters
+
+    - Important insight:
+        * Child processes are: heavier than worker threads, but more isolated and safer
+
+Clustering (Scaling Node.js apps):
+    - Clustering uses child_process internally to:
+        * create multiple Node.js processes (workers)
+        * all sharing the same server port
+    - Why it exists: Node.js is single-threaded → cannot use multiple CPU cores efficiently. Cluster solves that.
+    - How it works:
+        * One master process
+        * Multiple worker processes
+        * OS distributes requests
+    - Code Snippet:
+        const cluster = require('cluster');
+        const os = require('os');
+        if (cluster.isMaster) {
+            const numCPUs = os.cpus().length;
+
+            for (let i = 0; i < numCPUs; i++) {
+                cluster.fork();
+            }
+        }else {
+            require('./server');
+        }
+    
+    - Memory behavior
+        * No shared memory
+        * Each worker is a separate process
+        * Same as child process
+
+    - Communication
+        * IPC(inter process communication) between master and workers
+
+    - When to use
+        * Scaling web servers
+        * Handling high traffic
+
+    - Important insight
+        * Cluster is basically: A special use case of child_process, focused on load balancing
+
+Difference between Worker Threads, Child Process & Cluster:
+    | Feature          | Worker Threads                | Child Process              | Cluster        |
+    | ---------------- | ----------------------------- | -------------------------- | -------------- |
+    | Execution unit   | Thread                        | Process                    | Process        |
+    | Memory           | Shared possible               | Not shared                 | Not shared     |
+    | Overhead         | Low                           | High                       | High           |
+    | Communication    | Fast (shared memory possible) | Slower (IPC)               | Slower (IPC)   |
+    | Use case         | CPU tasks                     | Isolation / external tasks | Scaling server |
+    | Crash impact     | Can affect process            | Isolated                   | Isolated       |
+    | Multi-core usage | Yes                           | Yes                        | Yes            |
+
+Garbage Collection:
+    - Garbage Collection is the process of reclaiming memory occupied by objects that are no longer in use by the program.
+    - In Node.js, garbage collection is handled by the V8 engine, which is the JavaScript engine that powers Node.js.
+    - Two Main Categories of Objects:
+        * 1. Short-lived objects (most common)
+            Created and discarded quickly
+            Example: temporary variables in functions
+            Handled by fast cleanup (Scavenge)
+
+        * 2. Long-lived objects (less common)
+            Persist for longer durations
+            Example: objects in closures, global variables
+            Handled by deeper cleanup (Mark-Sweep / Compact)
+
+Router:
+    - Express Router is a mini Express application used to group related routes and 
+    middleware into separate modules, making the code more organized and maintainable.
+
+Promises:
+    - A Promise is an object that represents the future result of an asynchronous operation.
+    - It has 3 states:
+        * pending → still running
+        * fulfilled → completed successfully
+        * rejected → failed
+    
+    - Promise Chaining:
+        executing multiple asynchronous operations sequentially by returning a promise from 
+        .then() and passing its result to the next .then().
+        
+        e.g:
+        Promise.resolve(5).then(num => num * 2)
+        .then(num => num + 10).then(result => console.log(result)); // 20
+
+    - Types of Promise Static Methods:
+        * Promise.resolve():
+            Returns a resolved promise.
+
+        * Promise.reject():
+            Returns a rejected promise.
+
+        * Promise.all():
+            Runs multiple promises in parallel.
+            Fails immediately if ANY promise fails.
+            Returns array of results if all succeed.
+            Use it when Independent promises i.e any promise failed the whole operation should fail.
+        
+        * Promise.race():
+            Returns result of the FIRST promise that settles (resolve OR reject).
+            If fastest one rejects → race rejects.
+
+            Eg (code Snippet): Timeout handling
+
+            Example scenario:
+            API should respond within 2 seconds
+            If not → cancel and show timeout error
+
+            const fetchData = fetch("api/data");
+
+            const timeout = new Promise((_, reject) =>
+              setTimeout(() => reject("Request timeout"), 2000)
+            );
+
+            Promise.race([fetchData, timeout])
+              .then(res => console.log(res))
+              .catch(err => console.error(err));
+
+        * Promise.allSettled():
+            Waits for ALL promises.
+            Never rejects. 
+            You want all results, even failed ones..
+
+            Eg (code Snippet): You want all results, even failed ones.
+
+            Example scenario:
+
+            Show partial data:
+            user loaded ✅
+            orders failed ❌
+            payments loaded ✅
+            UI still renders what’s available
+
+            Promise.allSettled([
+            fetchUser(),
+            fetchOrders(),
+            fetchPayments()
+            ])
+            .then(results => {
+            results.forEach(result => {
+                if (result.status === "fulfilled") {
+                console.log("Success:", result.value);
+                } else {
+                console.log("Failed:", result.reason);
+                }
+            });
+            });
+        
+        * Promise.any():
+            Returns first SUCCESSFUL promise.
+            Ignores rejected ones.
+            Fails only if ALL fail.
+
+            Eg. (code Snippet):
+
+            Example scenario:
+
+            Multiple APIs, use the first one that responds
+
+            const api1 = fetch("api/endpoint1");
+            const api2 = fetch("api/endpoint2");
+            const api3 = fetch("api/endpoint3");
+
+            Promise.any([api1, api2, api3])
+            .then(fastestResponse => {
+                console.log("Fastest response:", fastestResponse);
+            })
+            .catch(error => {
+                console.log("All failed:", error);
+            });
+
+    Note: The Promise executor runs immediately (synchronously), but .then() handlers run asynchronously (in the microtask queue).
+    eg: (code Snippet):
+        console.log("A");
+
+        new Promise((resolve, reject) => {
+          console.log("B");// immediate synchronous code in the executor
+          resolve();
+        }).then(() => console.log("C"));// asynchronous (this makes code asynchronous)
+
+        console.log("D");
+
+    Output:
+        A B D C
+
+Process.agrv:
+    - process.argv is used to read command-line inputs in Node.js. 
+      It returns an array where the first two elements are Node’s path and script path, and the rest are user-provided arguments.
+
+    - e.g:
+        node app.js hello 123
+        [
+            '/usr/local/bin/node',  // index 0 → Node.js executable
+            '/Users/suraj/app.js',  // index 1 → script file
+            'hello',                // index 2 onwards → your inputs
+            '123'
+        ]
+
+What is GraphQL?
+    - GraphQL is a query language for APIs that lets the client ask exactly what data it needs—nothing more, nothing less.
+    - Created by Meta
+    - Sample Query: 
+        query {
+            user(id: 1) {
+                name
+                email
+            }
+        }
+    - Core Concepts:
+        1. Schema:
+            - What data is available
+            - Types of data
+            - e.g: 
+                type User {
+                    id: ID
+                    name: String
+                    email: String
+                }
+
+        2. Queries (Read data):
+            - e.g: 
+                query {
+                    user(id: 1){
+                        name
+                    }
+                }
+
+        3. Mutations (Write data):
+           - e.g:
+                mutation {
+                    createUser(name: "Suraj") {
+                        id
+                    }
+                }
+
+        4. Resolvers (BACKEND LOGIC):
+            - These are functions that fetch data.
+            - e.g:
+                user: (parent, args) => {
+                    return db.findUser(args.id);
+                }        
+
+
+    - 

@@ -1,0 +1,442 @@
+Difference between Session and JWT:
+    | Concept                              | Session (Stateful)                                                | Token / JWT (Stateless)                                                                               |
+    | ------------------------------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+    | Who stores data?                 | Server (memory/Redis/DB)                                          | Client (token itself holds data)                                                                      |
+    | What client has?                 | `sessionId` (just a reference)                                    | Full identity inside token (payload)                                                                  |
+    | Frontend request (how it’s sent) | Browser automatically sends cookie:<br>`Cookie: sessionId=abc123` | Usually sent manually:<br>`Authorization: Bearer <token>`<br>OR via cookie:<br>`Cookie: token=abc123` |
+    | Backend processing               | Looks up session store → fetch user                               | Verifies token signature → extracts user                                                              |
+    | DB lookup needed?                | ✅ Yes (to fetch session/user)                                     | ❌ No (unless extra validation needed)                                                                 |
+    | State management                 | Stateful (server remembers users)                                 | Stateless (server doesn’t store user state)                                                           |
+    | Scalability                      | ❌ Hard (needs shared store like Redis)                            | ✅ Easy (no shared state needed)                                                                       |
+    | Performance                      | Slightly slower (DB/cache lookup)                                 | Faster (just verify token)                                                                            |
+    | Logout                           | ✅ Easy (delete session from server)                               | ❌ Hard (token valid until expiry)                                                                     |
+    | Revocation                       | Immediate (delete session)                                        | Difficult (needs blacklist/short expiry)                                                              |
+    | Security (data exposure)        | Safe (data stays on server)                                       | Payload visible (but signed, not encrypted)                                                           |
+    | Token size                       | Small (just ID)                                                   | Larger (payload + signature)                                                                          |
+    | Storage on frontend              | Cookie (automatic)                                                | localStorage / cookie / memory                                                                        |
+    | CSRF risk                        | ⚠️ Yes (cookies auto-sent)                                        | ⚠️ Yes if stored in cookies<br>❌ No if in localStorage                                                |
+    | XSS risk                         | Low (httpOnly cookie)                                             | High if stored in localStorage                                                                        |
+    | Mobile/API friendly              | ❌ Less ideal                                                      | ✅ Best suited                                                                                         |
+    | Microservices                    | ❌ Hard (shared session needed)                                    | ✅ Ideal (token passed between services)                                                               |
+    | Load balancer                    | Needs sticky sessions OR shared store                             | No special handling needed                                                                            |
+    | Expiration control               | Server-controlled                                                 | Embedded in token (`exp`)                                                                             |
+    | Flexibility                      | Less flexible                                                     | Highly flexible (custom payload)                                                                      |
+
+    - Request Flow (Very Important):
+        - Session-Based Flow:
+            1. Login → server creates session
+            2. Server → sends cookie (sessionId)
+            3. Browser stores cookie
+            4. Every request:
+                Browser → automatically sends:
+                Cookie: sessionId=abc123
+            5. Server:
+                → finds session in Redis/DB
+                → gets user
+
+        - Token-Based Flow:
+            Case 1: Token in Header (most common in APIs)
+                1. Login → server returns token
+                2. Frontend stores token (memory/localStorage)
+                3. Every request:
+                    Authorization: Bearer <token>
+                4. Server:
+                    → verifies token
+                    → extracts user
+
+            Case 2: Token in Cookie (like your setup)
+                1. Login → server sets cookie:
+                    Cookie: token=abc123
+                2. Browser stores it
+                3. Every request:
+                    Cookie: token=abc123 (auto)
+                4. Server:
+                    → verifies token
+
+        - Modern apps use: JWT (short-lived) + Refresh Token + HttpOnly Cookie + CSRF
+
+    - JWT+Refresh Token Flow:
+        1. Login → access + refresh tokens set in cookies
+        2. Browser stores both automatically
+        3. API request → accessToken sent automatically
+        4. Server verifies accessToken
+            → If valid → success
+        5. If expired:
+            → Server returns 401
+        6. Frontend interceptor catches 401
+            → Calls /refresh (endpoint)
+        7. RefreshToken sent automatically via cookie
+        8. Server verifies refreshToken
+            → Issues new accessToken
+        9. Browser updates cookie
+        10. Frontend retries original request → success
+
+CSRF (Cross-Site Request Forgery): 
+    - An attacker tricks a logged-in user’s browser into making a request without their consent
+    - CSRF Attack Flow (Step-by-Step):
+        1. User logs into bank.com
+        2. Browser stores cookie (sessionId)
+        3. User visits evil.com
+        4. evil.com silently sends request:
+        POST bank.com/transfer
+        5. Browser automatically attaches cookie:
+        Cookie: sessionId=abc123
+        6. Server thinks:
+        "Valid user → allow request"
+        7. Money transferred
+    Note: Why this works? Because: Browser auto-sends cookies and server trusts cookie blindly
+    - CSRF Protection Flow (How We Fix It):
+        1. User logs in
+            → gets cookie (session/JWT)
+        2. Frontend requests CSRF token:
+            GET /csrf-token
+        3. Server sends:
+            csrfToken = random123
+        4. Frontend stores token (memory)
+        5. User performs action:
+            POST /transfer
+        6. Request contains:
+            Cookie: sessionId=abc123
+            CSRF-Token: random123
+        7. Server checks:
+            ✔ Cookie valid
+            ✔ CSRF token matches
+        8. Request allowed ✅
+    - One liner flow: Login → Get Cookie → Get CSRF Token → Send both → Server validates
+
+Browser Storage Comparison (Full Table):
+    | Feature                     | 🍪 Cookies                                  | 💾 LocalStorage                    | 🪟 SessionStorage          |
+    | ----------------------------| ------------------------------------------- | ---------------------------------- | -------------------------- |
+    | Stored in                   | Browser (cookie store)                      | Browser storage                    | Browser storage            |
+    | Used by backend?            | ✅ Yes (sent automatically in every request) | ❌ No                               | ❌ No                       |
+    | Sent with HTTP request?     | ✅ Yes (auto-attached)                       | ❌ No                               | ❌ No                       |
+    | Access via JS               | ⚠️ Yes (unless `httpOnly=true`)             | ✅ Yes                              | ✅ Yes                      |
+    | Lifetime                    | Configurable (session / expiry / maxAge)    | Permanent until manually cleared   | Until tab is closed        |
+    | Tab behavior                | Shared across all tabs                      | Shared across all tabs             | ❌ Tab-specific             |
+    | Cross-tab sharing           | ✅ Yes                                       | ✅ Yes                              | ❌ No                       |
+    | Server-side awareness       | ✅ Yes (server reads cookies)                | ❌ No                               | ❌ No                       |
+    | Best use case               | Authentication (session/JWT), CSRF tokens   | UI preferences, non-sensitive data | Temporary UI state per tab |
+    | Security risk               | CSRF (if not protected)                     | XSS risk                           | XSS risk                   |
+    | Can be blocked by browser?  | Sometimes (privacy settings)                | Rare                               | Rare                       |
+    | Size limit                  | ~4KB                                        | ~5–10MB                            | ~5–10MB                    |
+    | Works with SSR/backend auth | ✅ Yes                                       | ❌ No                               | ❌ No                       |
+
+Difference between encoding, encryption and hashing:
+    #Encoding:
+        - Encoding is the process of converting data from one format to another so it can be easily transmitted or stored.
+        - Key idea
+            * NOT for security ❌
+            * Anyone can decode it ✅
+            * No secret key required
+        - Example: Base64 encoding
+            const encoded = Buffer.from("hello").toString("base64");
+            console.log(encoded); // aGVsbG8=
+
+            const decoded = Buffer.from(encoded, "base64").toString("utf-8");
+            console.log(decoded); // hello
+        - Real-world use:
+            * Sending binary data in APIs (images in JSON)
+            * Email attachments
+            * URL encoding
+    
+    #Encryption:
+        - Encryption converts readable data (plaintext) into unreadable data (ciphertext) using a key, so only authorized parties can read it.
+        - Key idea:
+            * Used for security
+            * Requires a key
+            * Reversible (with correct key)
+        - Types:
+            * Symmetric encryption (same key)
+                Example: AES
+            * Asymmetric encryption (public + private key)
+                Example: RSA
+        - Code Snippet:
+            const crypto = require("crypto");
+            const algorithm = "aes-256-cbc";
+            const key = crypto.randomBytes(32);
+            const iv = crypto.randomBytes(16);
+
+            // Encrypt
+            const cipher = crypto.createCipheriv(algorithm, key, iv);
+            let encrypted = cipher.update("hello", "utf8", "hex");
+            encrypted += cipher.final("hex");
+            console.log("Encrypted:", encrypted);
+
+            // Decrypt
+            const decipher = crypto.createDecipheriv(algorithm, key, iv);
+            let decrypted = decipher.update(encrypted, "hex", "utf8");
+            decrypted += decipher.final("utf8");
+            console.log("Decrypted:", decrypted);
+        - Real-world use
+            * HTTPS (SSL/TLS)
+            * Secure messaging
+            * Protecting sensitive data (like API tokens)
+
+    #Hashing:
+        - Hashing converts data into a fixed-length string (hash) using a mathematical function.
+        - Key idea:
+            * One-way ❌ (cannot reverse)
+            * Deterministic (same input → same output)
+            * No key required (usually)
+        - Examples:
+            * SHA-256
+            * bcrypt
+        - Code Snippet:
+            const crypto = require("crypto");
+            const hash = crypto.createHash("sha256").update("password123").digest("hex");
+            console.log(hash);
+        - Real-world use: 
+            * Password storage 🔥 (VERY IMPORTANT)
+            * Data integrity verification
+            * Digital signatures
+
+    #Key Differences (Interview Gold Table):
+        | Feature      | Encoding        | Encryption       | Hashing                         |
+        | ------------ | --------------- | ---------------- | ------------------------------- |
+        | Purpose      | Data formatting | Data security    | Data integrity / password store |
+        | Reversible   | ✅ Yes           | ✅ Yes (with key) | ❌ No                            |
+        | Key required | ❌ No            | ✅ Yes            | ❌ No (mostly)                   |
+        | Security     | ❌ None          | ✅ High           | ✅ High (one-way)                |
+        | Output       | Readable format | Ciphertext       | Fixed-length hash               |
+        | Example      | Base64          | AES, RSA         | SHA-256, bcrypt                 |
+
+All about HTTP/HTTPS(Hyper Text Transfer Protocol/Secure):
+    #HTTP:
+        - HTTP is an application-layer(Layer 7) protocol used for communication between client (browser/app) and server.
+        - Runs on top of TCP, It follows: Request → Response model
+        - HTTP Flowchart:
+        ┌──────────────┐
+        │  Client      │
+        │ (Browser/App)│
+        └──────┬───────┘
+               │
+               │ 1. DNS Lookup (domain → IP)
+               ▼
+        ┌──────────────┐
+        │   Server IP  │
+        └──────┬───────┘
+               │
+               │ 2. TCP 3-Way Handshake
+               │    SYN → SYN-ACK → ACK
+               ▼
+        ┌──────────────┐
+        │ TCP Connection│
+        └──────┬───────┘
+               │
+               │ 3. HTTP Request (plain text)
+               │    GET / POST / etc.
+               ▼
+        ┌──────────────┐
+        │ Web Server   │
+        │ (NGINX/Node) │
+        └──────┬───────┘
+               │
+               │ 4. Process request
+               │    (DB / Logic)
+               ▼
+        ┌──────────────┐
+        │ HTTP Response │
+        │ (200/404 etc)│
+        └──────┬───────┘
+               │
+               │ 5. Response sent (plain text)
+               ▼
+        ┌──────────────┐
+        │   Client      │
+        │ Renders page  │
+        └──────────────┘
+
+        - HTTPS Flowchart:
+            [Client / Browser]
+                    |
+                    | 1. DNS Lookup (example.com → IP)
+                    v
+            [Server IP Found]
+                    |
+                    | 2. TCP 3-Way Handshake
+                    |    SYN
+                    |    SYN-ACK
+                    |    ACK
+                    v
+            [TCP Connection Established]
+                    |
+                    | 3. TLS Handshake START
+                    v
+            ---------------- TLS HANDSHAKE ----------------
+
+            Client → Server:
+                "Hello + supported ciphers + random number"
+
+            Server → Client:
+                "Certificate + chosen cipher + random number"
+
+            Client:
+                - Verifies certificate (CA check)
+                - Generates pre-master secret
+                - Encrypts with server public key
+
+            Both:
+                → Generate SAME session key (symmetric key)
+
+            ---------------- END TLS HANDSHAKE ------------
+
+                    |
+                    | 4. Secure Channel Established 🔒
+                    v
+            [Encrypted HTTP Communication Starts]
+                    |
+                    | 5. HTTP Request (ENCRYPTED)
+                    |    GET /index.html
+                    v
+            [Server (NGINX / Node / Apache)]
+                    |
+                    | 6. Process Request
+                    v
+            [HTTP Response (ENCRYPTED)]
+                    |
+                    | 200 OK + Encrypted Data
+                    v
+            [Client]
+                    |
+                    | 7. Decrypt using session key
+                    v
+            [Page Rendered Securely]
+        - HTTP methods:
+            | Method | Use              |
+            | ------ | ---------------- |
+            | GET    | Fetch data       |
+            | POST   | Create data      |
+            | PUT    | Replace data     |
+            | PATCH  | Update partially |
+            | DELETE | Remove           |
+        - HTTP statuscode:
+            | Code | Meaning      |
+            | ---- | ------------ |
+            | 200  | OK           |
+            | 201  | Created      |
+            | 400  | Bad request  |
+            | 401  | Unauthorized |
+            | 403  | Forbidden    |
+            | 404  | Not found    |
+            | 500  | Server error |
+
+        - HTTP Version:
+            | Feature               | HTTP/1.0        | HTTP/1.1      | HTTP/2            | HTTP/3             |
+            | --------------------- | --------------- | ------------- | ----------------- | ------------------ |
+            | Year                  | 1996            | 1997          | 2015              | ~2022              |
+            | Connection            | New per request | Keep-alive    | Single connection | Single connection  |
+            | Format                | Text            | Text          | Binary            | Binary             |
+            | Multiplexing          | ❌               | ❌             | ✅                 | ✅                  |
+            | Head-of-Line Blocking | ❌               | ❌ (app-level) | ⚠️ (TCP-level)    | ❌                  |
+            | Header Compression    | ❌               | ❌             | ✅                 | ✅                  |
+            | Transport             | TCP             | TCP           | TCP               | UDP (QUIC)         |
+            | Server Push           | ❌               | ❌             | ✅                 | ❌ (mostly removed) |
+            | Speed                 | Slow            | Better        | Fast              | Fastest            |
+
+Polling, Long Polling and Websockets:
+    # Polling:
+        - Client keeps asking the server again and again at fixed intervals: “Do you have new data?”
+        - How it works:
+            1. Client sends request to server
+            2. Server responds immediately (with data or empty)
+            3. Client waits for some time (e.g., 2 sec)
+            4. Client sends request again
+        - Example: (frontend code)
+            setInterval(async () => {
+                const res = await fetch('/messages');
+                const data = await res.json();
+                console.log(data);
+            }, 2000);
+        - Key Points:
+            * Simple to implement
+            * Wasteful if no new data
+            * High latency (depends on interval)
+            * Http overhead
+        - Problem: 
+            * If data comes at 1.1 sec but interval is 2 sec → user sees delay
+        - Use Polling when:
+            * Simple app
+            * Data changes rarely
+            * Real-time not important
+
+    # Long Polling:
+        - Client asks once, but server waits until data is available before responding. “Tell me when something happens.”
+        - How it works:
+            1. Client sends request
+            2. Server does NOT respond immediately
+            3. Server waits until:
+                -> new data arrives OR
+                -> timeout occurs
+            4. Server responds
+            5. Client immediately sends next request
+        - Example:
+            async function poll() {
+                const res = await fetch('/getUpdates');
+                const data = await res.json();
+                console.log(data);
+
+                // Immediately request again
+                poll();
+            }
+            poll();
+        - Key Points:
+            * Reduces unnecessary requests
+            * Near real-time
+            * Still HTTP-based
+        - Problem:
+            * Each response closes connection → new request needed
+            * Still overhead of HTTP headers again & again
+        - Use Long Polling when:
+            * Need near real-time
+            * Cannot use WebSockets (firewalls, legacy infra)
+    
+    # WebSockets:
+        - Create a persistent, full-duplex connection between client and server. “Let’s keep the connection open and talk anytime.”
+        - How it works:
+            1. Client sends HTTP request (Upgrade request)
+            2. Server upgrades to WebSocket
+            3. Connection stays open
+            4. Both client & server can send data anytime
+        - Example (Node.js + WebSocket):
+            * Server:
+                const WebSocket = require('ws');
+                const wss = new WebSocket.Server({ port: 3000 });
+                wss.on('connection', (ws) => {
+                    ws.send('Connected!');
+                    ws.on('message', (msg) => {
+                        console.log('Received:', msg.toString());
+                    });
+                });
+            * Client:
+                const socket = new WebSocket('ws://localhost:3000');
+                socket.onmessage = (event) => {
+                    console.log(event.data);
+                };
+                socket.send("Hello server");
+        - Key Points:
+            * Real-time communication
+            * Bi-directional
+            * Low latency
+            * Efficient after connection established
+        - Problem:
+            * More complex
+            * Needs connection management (reconnect, scaling)
+            * Not ideal for simple apps
+        - Use WebSockets when:
+            * Chat apps (like your SupX 🔥)
+            * Live notifications
+            * Multiplayer games
+            * Stock price updates
+        
+    # Difference:   
+        | Feature              | Polling                  | Long Polling            | WebSockets              |
+        | -------------------- | ------------------------ | ----------------------- | ----------------------- |
+        | Connection Type      | Short-lived HTTP         | Long-held HTTP          | Persistent TCP          |
+        | Who initiates        | Client only              | Client                  | Both client & server    |
+        | Latency              | High                     | Medium (near real-time) | Low (real-time)         |
+        | Server Load          | High (many requests)     | Medium                  | Low (after connection)  |
+        | Bandwidth Usage      | High                     | Medium                  | Low                     |
+        | Real-time capability | ❌ Poor                   | ⚠️ Moderate             | ✅ Excellent             |
+        | Complexity           | Easy                     | Medium                  | Hard                    |
+        | Overhead             | High (headers each time) | Medium                  | Low                     |
+        | Use case             | Simple apps              | Chat (older systems)    | Chat, live apps, gaming |

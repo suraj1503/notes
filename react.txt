@@ -1,0 +1,1127 @@
+---------------------------------------------------------------------------
+React
+---------------------------------------------------------------------------
+
+    React (developed by Facebook/Meta) is a JavaScript library for building user interfaces
+    Bundlers = Combines multiple JS/CSS files into optimized bundles for deployment. e.g parcel, webpack, vite
+    node_modules is the folder where npm/yarn/pnpm/bun installs all the project dependencies
+    AbortController is a Web API that allows cancelling asynchronous operations like fetch by passing a signal and calling abort.
+    Turbopack = A Rust-based bundler in NEXT.js
+
+    Vite
+        1. Type: Next-gen bundler + dev server
+        2. Language: Built with ESBuild (Go) for dev and Rollup for prod builds.
+        3. Vite doesn’t bundle everything upfront. Instead, during development, 
+           it serves your files as native ES modules directly to the browser. 
+           Only when you build for production does it bundle and optimize using Rollup.
+
+    parcel
+        1. Type: Zero-config bundler
+        2. Language: Rust (v2 onwards)
+        3. Parcel automatically detects dependencies and parallelizes builds using worker threads. You don’t need a config file — it infers everything
+
+    Webpack
+        1. Webpack is a powerful static module bundler for modern JavaScript applications
+        2. capable of transforming, bundling, or packaging just about any resource or asset
+        3. What Webpack Does
+              Module Bundling: Combines multiple JavaScript files into one or more bundles
+              Asset Processing: Handles CSS, images, fonts, and other static assets
+              Code Splitting: Splits code into chunks for better performance
+              Hot Module Replacement: Updates modules in the browser without full reload
+              Tree Shaking: Removes unused code from the final bundle
+              Optimization: Minifies, compresses, and optimizes code for production
+
+    Babel ( Abstract Syntax Tree )
+        1. Babel is a JavaScript compiler that transforms modern JavaScript (ES6+) into backward-compatible
+        2. Older browsers may not support these features. Babel acts as a transpiler, converting modern JS to a version that all browsers can execute
+        3. How Babel Works
+            1. Parsing -> Converts code into an Abstract Syntax Tree (AST).
+            2. Transformation -> Applies transformations like polyfilling, transpiling, and removing unsupported syntax.
+            3. Code Generation -> Converts the transformed AST back into JavaScript.
+        4. Babel Key Components
+            1. Core -> The Babel compiler itself.
+            2. Presets -> Bundles of plugins for specific transformations
+            3. Plugins -> Individual transformations like class properties or optional chaining.
+            4. Polyfills -> Introduce missing functions or objects
+        5. Advanced Features in Babel
+            1. Tree Shaking (Dead Code Elimination)
+            2. Babel Polyfills vs. Transpilation
+                1. Polyfills: Add missing functionality for older browsers
+                2. Transpilation: Converts new syntax to an older equivalent.
+        6. Limitations of Babel
+            1. Does not provide runtime support: Needs polyfills for missing APIs like fetch().
+            2. Does not handle TypeScript type-checking: Needs tsc or ESLint for that.
+
+    Source Maps (types : hidden-source-map, eval, source-map )
+        1. A source map is a file that maps your minified or transpiled JavaScript code back to its original source code
+        2. This allows browsers, debuggers, and developers to trace errors in the original files instead of unreadable, compressed code
+        3. Minified Code : 
+            function add(a,b){return a+b}console.log(add(5,10));
+
+        How does a browser know where to find the source map file?
+        👉 The minified JS file contains //# sourceMappingURL=file.js.map. This tells the browser where to look
+
+    CRA vs Vite
+        A. CRA (Create React App)
+            1. Create React App (CRA) is the official tool developed by Meta (Facebook) to quickly set up a React project without manual configuration
+            2. Uses Webpack & Babel under the hood. [Webpack  : Webpack is a module bundler that helps in optimizing, transforming, and bundling JavaScript]
+            3. Supports Progressive Web App (PWA) out-of-the-box
+        B. VITE
+            1. Vite (French for "fast") is a modern build tool and development server that provides a blazing-fast development experience for React, Vue, Svelte, and more
+            2. Uses ES Modules (ESM) instead of Webpack bundling (40x faster than Webpack)
+            3. Supports SSR (Server-Side Rendering) out-of-the-box
+
+        C. Why Vite is Faster Than CRA?
+            1. No upfront bundling – Vite serves unbundled ES modules directly.
+            2. On-demand Compilation – Only compiles files when requested.
+            3. Uses ESBuild – 40x faster than Babel/Webpack.
+            4. Faster HMR – Updates are near instantaneous.
+
+    Real DOM
+        1. The actual browser DOM that the user sees.
+        1. Manipulations here affect the UI directly.
+        1. React tries to avoid touching it directly too often because updates are slow
+
+    Virtual DOM
+        1. Virtual DOM (VDOM) is an in-memory representation of the real DOM elements. It’s a lightweight JavaScript object that React uses to track changes in the UI without touching the real DOM
+        2. How It Works (High-Level Explanation)
+            1. Render -> The UI is first created in memory as a Virtual DOM tree.
+            2. Diffing -> When the UI updates, a new Virtual DOM is created and compared with the previous one.
+            3. Reconciliation -> The minimal set of changes is calculated and applied to the real DOM.
+
+    Reconciliation | React Fiber (React Fiber is the reconciliation algorithm introduced in React 16)
+        1. Reconciliation is the process React uses to efficiently update the real DOM by applying only the necessary changes based on the Virtual DOM diffing algorithm
+        2. Reconciliation Process - Diffing Algorithm [heuristic-based algorithm] = Runs inside the reconciliation process
+            1. React re-renders the component when state or props change.
+            2. A new Virtual DOM tree is created.
+            3. React compares (diffs) the new Virtual DOM with the previous one.
+            4. It calculates the minimal changes needed and updates only those parts in the real DOM.
+
+    Diffing Algorithm
+        1. React uses an efficient Diffing Algorithm (O(n) complexity) to compare the old and new Virtual DOM trees instead of a deep comparison (O(n³)).
+        2. How the Diffing Algorithm Works
+            1. Compare Element Types - Changing <div> to <p> causes a full re-render.
+            2. Compare Child Elements (Key Optimization) - If keys are missing or change incorrectly, React removes and recreates items instead of updating them efficiently.
+
+    jsx
+        1. JSX stands for JavaScript XML.
+        1. It’s a syntax extension for JavaScript that looks like HTML, but compiles down to plain JavaScript.
+        1. It allows you to write UI in a declarative, HTML-like syntax inside JavaScript.
+        2. JSX Rules / Syntax
+            Single root element -> Must wrap everything in one parent (or use <> </> fragments).
+            Expressions inside {} -> You can embed JS values, function calls, variables.
+            Attributes use camelCase (e.g. className, onClick).
+            JSX prevents injection attacks — values inside {} are automatically escaped. prevent XSS.
+            Conditionals -> Ternaries or logical AND (&&), since if/else doesn’t work inside JSX directly.
+            Lists -> Use .map() to render arrays, and always provide key props.
+            Comments -> {/  comment here  /}.
+
+    Hooks
+        useState
+            1. useState is a React Hook that lets you add state to functional components
+            2. Before hooks (pre React 16.8), only class components had state. Now, functional components can be fully stateful.
+            3. setState does not update immediately — React schedules it. Don’t rely on the state right after calling setState
+            4. Setting state to same value still re-renders (React compares by reference, not deep equality)
+            5. State updates are async & batched -> multiple setState calls in same event loop flush together.
+            6. e.g const [state, setState] = useState(initialState);
+
+        useReducer
+            1. Alternative to useState for complex state logic.
+            2. Accepts a reducer function [(state, action) => newState] and an initial state.
+            3. Returns [state, dispatch].
+            4. Best when state transitions are complex/multiple.
+            5. Helps avoid deeply nested useState.
+            6. e.g.const [state, dispatch] = useReducer(reducer, initialState);
+
+        useContext
+            1. Allows passing data through component tree without props drilling.
+            2. Works with [React.createContext()]
+            3. Returns the current context value for the given context.
+            4. Must be used inside a matching [<Context.Provider>]
+            5. Rerenders when context value changes.
+            6. Doesn’t trigger re-render if provider’s value is referentially same.
+            7. Only works inside matching provider.
+            8. e.g. const value = useContext(MyContext);
+
+        useRef
+            1. Returns a mutable ref object: { current: initialValue }.
+            2. Value persists across renders but doesn’t trigger re-render. 
+            3. Commonly used for DOM refs (ref={myRef}) or storing mutable values.
+            4. Great for caching previous values, timers, or external libraries.
+            5. Different from state: updating .current does not re-render. Updating .current is synchronous
+            6. e.g.
+                    const inputRef = useRef(null);
+                    inputRef.current.focus();
+
+        useLayoutEffect
+            1. Runs synchronously after DOM mutations but before paint (can block rendering).
+            2. Good for measuring DOM nodes and layout calculations.
+            3. Blocks the paint -> can cause performance issues if overused.
+            4. Runs before useEffect. Same cleanup behavior as useEffect
+            5. Use when you need to mutate DOM before browser paints.
+            6. e.g.
+                    useLayoutEffect(() => { 
+                        /  measure DOM  / 
+                    }, []);
+
+        useEffect
+            1. Runs after render (async, non-blocking).
+            2. Used for side effects: data fetching, subscriptions, timers, logging.
+            3. Cleanup function returned runs before next effect or on unmount.
+            3. Dependency array controls re-run.
+                [] -> run once on mount
+                [x] -> run when x changes
+                no array -> run after every render
+            4. Beware of stale closures (capture old values).
+            5. e.g.
+                    useEffect(() => { 
+                        fetchData(); return () => cleanup(); 
+                    }, [id]);
+
+        useImperativeHandle
+            1. Customizes the value exposed via ref when using forwardRef.
+            2. Lets parent control child’s methods imperatively.
+            3. Should be used sparingly — React favors declarative.
+            4. Typically for exposing focus/scroll/animation APIs.
+            5. Works only inside forwardRef.
+            6. e.g.
+                    useImperativeHandle(ref, () => ({ 
+                        focus: () => inputRef.current.focus() 
+                    }));
+
+        useCallback
+            1. Memoizes a function between renders.
+            2. Prevents unnecessary re-creation of callbacks (useful in child props).
+            3. Dependencies control when function is recreated.
+            4. Helps avoid child re-renders with React.memo.
+            5. Avoid overuse — use only when passing functions to children or expensive closures.
+            6. e.g.
+                    const memoFn = useCallback(() => { 
+                        ... 
+                    }, [deps]);
+
+        useMemo
+            1. Memoizes a computed value between renders.
+            2. Runs the function only when dependencies change.
+            3. Useful for expensive calculations or derived state.
+            4. Similar to useCallback but for values, not functions.
+            5. Avoid premature optimization — use only for heavy computations.
+            6. Similar to useCallback but for values, not functions.
+            7. e.g.
+                    const memoValue = useMemo(() =>{
+                        computeExpensiveValue(a, b)
+                    } [a, b]);
+
+        useDeferredValue - how it differs from debounce
+            1.  tells React: "this value can lag behind. Prioritize more urgent updates first.
+                React's concurrent scheduler decides when to update
+                If a new value comes in, React abandons the stale deferred render
+                Keeping input responsive while a heavy re-render happens
+            2.  In short: debounce is about delaying execution by a fixed time. useDeferredValue is about deprioritizing a render so urgent updates (typing) aren't blocked. It adapts to the user's device speed.
+            3.  e.g  
+                    const [query, setQuery] = useState("");
+                    const deferredQuery = useDeferredValue(query);
+
+        useTransition - for non-urgent state updates
+            Marks a state update as non-urgent, allowing React to keep the UI responsive during expensive re-renders.
+            code 
+                    const [isPending, startTransition] = useTransition();
+                    function handleFilterChange(newFilter: string) {
+                        startTransition(() => {
+                            setFilter(newFilter); // This update is "transitional" — React can interrupt it
+                        });
+                    }
+
+                    return (
+                        <>
+                            <FilterBar onChange={handleFilterChange} />
+                            {isPending ? <Spinner /> : <ResultsList filter={filter} />}
+                        </>
+                    );
+
+    Fragment
+        1. A Fragment is a special React component that lets you group multiple children without adding extra nodes to the DOM
+        1. React introduced Fragments in v16.2.
+        1. improves performance, keeps HTML semantics correct
+        1. Ways to Write -> <></>  <React.Fragment></React.Fragment>
+
+    Pure Component / React.memo
+        1. A Pure Component in React is a class component that implements shouldComponentUpdate with a shallow prop and state comparison
+        1. Why - Avoids unnecessary re-renders -> improves performance.
+        1. Pure components re-render only when props/state actually change
+        1. For function components, you use React.memo instead of PureComponent
+        1. PureComponents only do shallow comparison, so nested changes won’t be detected
+        1. e.g
+
+            class Counter extends React.PureComponent {
+                render() {
+                    console.log("Rendering Counter");
+                    return <h1>{this.props.count}</h1>;
+                }
+            }
+
+            function App() {
+                const [count, setCount] = React.useState(0);
+                return (
+                    <>
+                        <Counter count={count} />
+                        <button onClick={() => setCount(count)}>Re-render</button>
+                    </>
+                );
+            }
+
+            What Happens Here:
+            When you click the button, you call setCount(count) — but the value hasn’t changed (it’s still 0).
+                React triggers a re-render in <App />, but:
+                <Counter /> is a PureComponent.
+                Its prop (count) didn’t actually change (still 0).
+                So React skips re-rendering Counter.
+                You’ll see that "Rendering Counter" doesn’t log again.
+
+    Component Lifecycle
+        Every React component (especially class components) goes through a series of phases
+        
+        1. Mounting -> component is created & inserted into DOM
+            1. constructor()                     -> Initialize state, bind methods.
+            1. static getDerivedStateFromProps() -> Rarely used; update state based on props before render.
+            1. render()                          -> Returns JSX (pure function, no side effects).
+            1. componentDidMount()               -> Called once after first render. Perfect for API calls, subscriptions, DOM access.
+
+        2. Updating -> Component is re-rendered due to changes in props or state.
+            1. static getDerivedStateFromProps()                  -> Runs before every render when props change.
+            1. shouldComponentUpdate(nextProps, nextState)        -> Decide whether to re-render. Useful for performance.
+            1. render()                                           -> Re-renders UI.
+            1. getSnapshotBeforeUpdate(prevProps, prevState)      -> Capture info (like scroll position) before DOM updates.
+            1. componentDidUpdate(prevProps, prevState, snapshot) -> Called after render, good for reacting to prop/state changes (e.g., fetch new data when prop changes).
+
+        3. Unmounting -> Component is removed from the DOM.
+            1. componentWillUnmount() -> Cleanup: cancel timers, remove subscriptions, abort API calls.
+
+        4. Functional Components Equivalent
+            componentDidMount → useEffect(() => {...}, [])
+            componentDidUpdate → useEffect(() => {...}, [deps])
+            componentWillUnmount → useEffect(() => { return cleanup }, [])
+            shouldComponentUpdate → handled with React.memo / useMemo / useCallback.
+            getSnapshotBeforeUpdate → useLayoutEffect
+
+    React Portal
+        1. A Portal lets you render children into a different part of the DOM tree that exists outside the parent component’s DOM hierarchy
+        1. Portals don’t break React’s event bubbling → events still bubble up through the React tree, not the DOM tree.
+        1. Why -   Normally, React renders a component inside its parent’s DOM node.
+                But sometimes you need to “escape” that — e.g., modals, dialogs, dropdowns, tooltips — so they are not affected by parent’s CSS overflow/position/z-index
+        2. e.g
+                Without Portal:                     With Portal:
+                ------------------------------------------------------------
+                #root                               #root
+                └─ App                              └─ App
+                    ├─ <h1>App Content</h1>             └─ <h1>App Content</h1>
+                    └─ <div class="modal">...        #modal-root
+                                                        └─ <div class="modal">...
+
+    React Fiber
+        React Fiber is a complete rewrite of React’s reconciliation engine, introduced in React 16 (2017).
+        It enables concurrent, interruptible, prioritized, incremental rendering.
+        Before Fiber, React used a synchronous recursive stack-based reconciler which could not pause work.
+        Fiber makes React capable of pausing, resuming, and aborting rendering, improving responsiveness.
+        A Fiber is a JavaScript object representing a unit of work—a lightweight virtual stack frame.
+        Each Fiber corresponds to:
+            A React component (function/class)
+            A DOM element
+            A text node
+            A Suspense boundary
+            A context provider/consumer node
+        Fiber introduced the two-phase architecture:
+            Render Phase: async, pausable, builds Fiber tree
+            Commit Phase: sync, applies DOM changes
+        Fiber is the foundation for Hooks, Suspense, Transitions, Time Slicing, and Concurrent Rendering (React 18).
+
+    React Router
+        1. React Router is the standard routing library for React apps.
+        1. It enables client-side routing → means navigation happens in the browser without full page reloads.
+        1. Types
+            1. Router Types
+                1. BrowserRouter → Uses HTML5 history API (pushState, popState). Standard for web apps.
+                1. HashRouter → Uses URL hash (/#/path). Good for static file hosting (e.g., GitHub Pages).
+                1. MemoryRouter → Stores history in memory
+
+            2. Route & Routes
+                Routes → Wrapper that contains all your route definitions.
+                Route → Maps a path (/about) to a component
+                e.g
+                    import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+                    function App() {
+                        return (
+                            <BrowserRouter>
+                                <Routes>
+                                    <Route path="/" element={<Home />} />
+                                    <Route path="/about" element={<About />} />
+                                </Routes>
+                            </BrowserRouter>
+                        );
+                    }
+
+            3. Link & NavLink
+                Link → Navigate between routes without reloading page.
+                NavLink → Like Link, but applies active styles when URL matches
+                e.g
+                    <Link to="/about">Go to About</Link>
+                    <NavLink to="/about" className={({ isActive }) => isActive ? "active" : ""}>
+                        About
+                    </NavLink>
+
+        1. Hooks in React Router v6
+            useNavigate() → programmatic navigation.
+            useParams() → access route params (e.g., /user/:id).
+            useLocation() → get current URL/location object.
+            useSearchParams() → read/write query strings.
+            useRoutes() → define routes using objects instead of JSX.
+
+    React StrictMode
+        1. Identifies unsafe lifecycle methods
+        1. Warns about deprecated APIs
+        1. Detects legacy string refs
+        1. Detects unexpected side-effects in constructors, render, etc
+        1. Logs twice in dev (because of StrictMode) but only once in production. 
+            useEffect(() => {
+                console.log("Effect runs");
+            }, []);
+        
+        1. e.g
+                ReactDOM.createRoot(document.getElementById("root")).render(
+                    <React.StrictMode>
+                        <App />
+                    </React.StrictMode>
+                );
+
+                // Basic inline creating the React apk with cdn links in html file of ReactDOM, React, Babel
+                const root = ReactDOM.createRoot(document.getElementById('root'));
+                root.render(<App />);
+
+    React Lazy and Suspense
+        React.lazy() lets you dynamically import a component and load it only when it’s rendered.
+        It enables code splitting, reducing the initial bundle size.
+        Works only with default exports.
+        Lazy components cannot be rendered outside a Suspense boundary
+        <Suspense> is a wrapper component that shows a fallback UI while the lazy component is loading
+        e.g
+            import React, { Suspense } from 'react';
+            const LazyComponent = React.lazy(() => import('./HeavyComponent'));
+            function App() {
+                return (
+                    <div>
+                        <h1>Hello React</h1>
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <LazyComponent />
+                        </Suspense>
+                    </div>
+                );
+            }
+            export default App;
+
+    package.json
+        Purpose: The manifest file for your project.
+        Contains:
+        Project metadata (name, version, author, license, scripts).
+        Dependency ranges (e.g., "react": "^18.2.0").
+        Dev dependencies, peer dependencies.
+        Scripts (npm run build, npm start).
+        Human-written and human-edited.
+        Portable — shared with everyone in the repo.
+        Versioning style: (MAJOR.MINOR.PATCH)
+            "^1.2.3" → any compatible minor,patch (1.x.x). 
+            "~1.2.3" → any patch version (1.2.x).
+
+    package-lock.json
+        Purpose: The snapshot of your dependency tree.
+        Generated automatically when you run npm install.
+        Ensures deterministic installs across environments.
+        Not meant for manual editing.
+        Contains:
+            Exact resolved versions of every package (and sub-dependency).
+            Integrity checksums for security.
+            Structure of dependency tree.
+
+    Differences - 
+        
+        1. export default & export
+
+            | Feature        | `export default`       | `export` (named)                        |
+            | -------------- | ---------------------- | --------------------------------------- |
+            | Count per file | Only   one   allowed   | Multiple allowed                        |
+            | Import name    | Can be anything        | Must match export name (unless aliased) |
+            | Use case       | Main thing from a file | Utilities, helpers, multiple exports    |
+            | Import syntax  | `import X from '...'`  | `import { X, Y } from '...'`            |
+
+        2. Service worker & Web worker
+
+            | Feature       | Service Worker                      | Web Worker                               |
+            | ------------- | ----------------------------------- | ---------------------------------------- |
+            | Purpose       | Network proxy, offline caching      | Background computation                   |
+            | Lifecycle     | Independent of page, persistent     | Tied to the page, stops when page closes |
+            | Access        | Can intercept network requests      | Cannot intercept network requests        |
+            | Main use case | Offline support, push notifications | Heavy computation without UI blocking    |
+            | DOM access    | No                                  | No                                       |
+
+        3. Class & functional component
+
+            | Feature / Aspect      | Class Component                                          | Functional Component                                    |
+            | --------------------- | ---------------------------------------------------------| ------------------------------------------------------- |
+            |   Definition          | ES6 class that extends `React.Component`                 | JavaScript function returning JSX                       |
+            |   State Management    | `this.state` + `this.setState()`                         | `useState` and other Hooks                              |
+            |   Lifecycle Methods   | Full set: `componentDidMount`, `shouldComponentUpdate`,  | Hooks: `useEffect`, `useLayoutEffect` replace lifecycle |
+            |                       |           `componentDidMount`, `shouldComponentUpdate`,  |                                                          |
+            |   `this` Binding      | Needs `this` binding for methods                         | No `this` required                                      |
+            |   Syntax Complexity   | Verbose; more boilerplate                                | Concise and cleaner syntax                              |
+            |   Performance         | Slightly slower historically, larger bundle              | Usually faster, especially with hooks & memoization     |
+            |   Hooks Support       | Not supported                                            | Fully supported                                         |
+            |   Side Effects        | Handled in lifecycle methods                             | Handled via `useEffect` and other hooks                 |
+            |   Reusability         | Reusable via HOCs, render props                          | Reusable via custom hooks                               |
+            |   Best Use Case       | Legacy codebases or complex lifecycle-heavy apps         | Modern apps, prefer hooks for simplicity                |
+
+        4. controlled vs uncontrolled components
+
+            | Feature / Aspect     | Controlled Component                                   | Uncontrolled Component                           |
+            | -------------------- | ------------------------------------------------------ | ------------------------------------------------ |
+            |   State Management   | React state (`useState` or `this.state`)               | DOM handles state; accessed via `ref`            |
+            |   Value Binding      | `value={state}`                                        | No `value` binding; use `defaultValue` if needed |
+            |   Updates            | `onChange` handler updates React state                 | DOM updates automatically                        |
+            |   Form Submission    | Use React state to read values                         | Use `ref` to read values                         |
+            |   Predictability     | Highly predictable, React is source of truth           | Less predictable, React is not source of truth   |
+            |   Validation         | Easy to validate on every change                       | Validation usually done on submit                |
+            |   Best Use Case      | Dynamic forms, real-time validation, React-driven apps | Simple forms, quick prototypes, or legacy code   |
+            |   Boilerplate        | More code for handlers                                 | Less code, simpler                               |
+
+        5.  SSR vs CSR
+
+            | Feature / Aspect       | CSR (Client-Side Rendering)              | SSR (Server-Side Rendering)                                                         |
+            | ---------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
+            |   Rendering            | Browser renders via JS                   | Server renders full HTML                                                            |
+            |   Initial Load         | Slower (needs JS to render)              | Faster (HTML ready immediately)                                                     |
+            |   SEO                  | Poor for crawlers unless pre-rendered    | Better SEO; HTML content available immediately                                      |
+            |   Interactivity        | Hydration needed for React interactivity | React hydrates after HTML is loaded                                                 |
+            |   Performance          | Fast navigation after initial load (SPA) | Initial load faster, subsequent navigations slower unless using client-side routing |
+            |   Bundle Size          | JS heavy                                 | Can split JS; smaller initial payload possible                                      |
+            |   Use Case             | SPAs with dynamic content, dashboards    | Public pages, blogs, e-commerce product pages                                       |
+            |   Framework Examples   | React, Vue, Angular SPA                  | Next.js, Nuxt.js, Remix                                                             |
+
+        6. React vs Angular
+
+            | Feature / Aspect           | React                                                                 | Angular                                                                        |
+            | -------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+            |   Type                     | Library for building UI                                               | Full-fledged framework                                                         |
+            |   Language                 | JavaScript / TypeScript (optional)                                    | TypeScript (mandatory)                                                         |
+            |   Data Binding             | One-way binding (default), two-way via `useState` & controlled inputs | Two-way binding (`[(ngModel)]`)                                                |
+            |   DOM                      | Virtual DOM                                                           | Real DOM with change detection                                                 |
+            |   Learning Curve           | Moderate; simpler core concepts                                       | Steep; many built-in concepts (DI, RxJS, modules)                              |
+            |   Component Architecture   | Functional + class components                                         | Component + Module + Service architecture                                      |
+            |   State Management         | Hooks (`useState`, `useReducer`), external libs like Redux            | Services + RxJS, NgRx for complex state                                        |
+            |   Performance              | High due to Virtual DOM                                               | Slightly slower for complex apps, but optimized with change detection strategy |
+            |   Routing                  | React Router (external)                                               | Built-in Angular Router                                                        |
+            |   Tooling / CLI            | Create React App, Vite, Next.js                                       | Angular CLI (strongly opinionated)                                             |
+            |   Flexibility              | Very flexible; choose libraries as needed                             | Opinionated; many features built-in                                            |
+            |   Community & Ecosystem    | Very large, strong ecosystem                                          | Large, enterprise-focused                                                      |
+            |   Use Case                 | SPAs, dashboards, modern web apps                                     | Enterprise apps, full-featured applications                                    |
+
+    How browser render web page
+
+        browser-rendering/
+        │
+        ├─ HTML/                  # The HTML file requested from the server
+        │  └─ comment: "Main markup, parsed first to start DOM tree"
+        │
+        ├─ DOM/                   # Document Object Model
+        │  └─ comment: "Tree of HTML elements; represents structure"
+        │
+        ├─ CSS/                   # CSS files (inline & external)
+        │  └─ CSSOM/              # CSS Object Model
+        │      └─ comment: "Parsed CSS rules and styles applied to DOM nodes"
+        │
+        ├─ RenderTree/             # Combination of DOM + CSSOM
+        │  └─ comment: "Visible elements with computed styles"
+        │
+        ├─ Layout/                 # Reflow step
+        │  └─ comment: "Calculates size & position of each element"
+        │
+        ├─ Paint/                  # Rasterization step
+        │  └─ comment: "Fills pixels for backgrounds, text, borders, shadows"
+        │
+        ├─ Compositing/            # GPU layers
+        │  └─ comment: "Layers combined to produce final image efficiently"
+        │
+        └─ Screen/                 # Pixels displayed to user
+            └─ comment: "Final rendered page seen by user"
+
+    Web Accessibility (a11y)
+        1. Web Accessibility (a11y) is the practice of building web applications that can be used by everyone, 
+           including people with disabilities such as visual, auditory, motor, and cognitive impairments.
+           Makes apps usable for people with screen readers, keyboard-only navigation, or color blindness
+        1. “a11y” = accessibility (a + 11 letters + y)    
+        1. WCAG :- (Web Content Accessibility Guidelines) — a standard defining how to make web content accessible
+           Principles
+            1. Perceivable    :- Content must be visible/hearable Example: alt text for images
+            2. Operable       :- Users must be able to interact Example: keyboard navigation
+            3. Understandable :- UI should be predictable Example: clear labels, error messages
+            4. Robust         :- Works across browsers and assistive tech
+        1. Techniques
+            1. Semantic HTML -> <h1>Main Title</h1>
+            2. ARIA (Accessible Rich Internet Applications) Attributes -> <button aria-label="Close modal">X</button>
+            3. Keyboard Navigation -> <div tabIndex={0}></div>
+            4. Focus Management -> useEffect(() => {modalRef.current.focus();}, []);
+            5. Alt Text for Images
+
+    Web Performance Metrics | Core Web Vitals
+        1. Metrics that measure how quickly a web page loads, renders, and responds to user interactions.
+        1. Helps identify bottlenecks and improve user experience (UX).
+        1. Often measured using Lighthouse, Chrome DevTools
+        1. Key Metrics
+            1. Largest Contentful Paint (LCP)
+                Measures loading performance.
+                When the largest visible element (image, heading, text block) is fully rendered.
+                Good score: ≤ 2.5s
+
+            2. First Input Delay (FID)
+                Measures interactivity.
+                Time between user’s first interaction (click, tap, keypress) and browser responding.
+                Good score: ≤ 100ms
+
+            3. Cumulative Layout Shift (CLS)
+                Measures visual stability.
+                Calculates unexpected layout shifts during page load (ads, images without dimensions).
+                Good score: ≤ 0.1
+
+            4. First Contentful Paint (FCP)
+                Time until first piece of DOM content is rendered (text, image, SVG).
+                Good score: ~1s–1.8s
+
+            5. Time to Interactive (TTI)
+                Time until the page is fully interactive (all scripts loaded and event handlers ready).
+                Good score: ≤ 3–5s
+
+            6. Total Blocking Time (TBT)
+                Sum of all time periods long tasks block the main thread between FCP and TTI.
+                Reduces responsiveness; smaller TBT → better FID
+
+    How to improve SEO of Website
+        Semantic HTML + meta tags
+        Fast performance (Core Web Vitals)
+        SSR (Next.js) for React
+        Mobile-friendly + accessible
+        Clean URLs + sitemap
+
+    ngrok
+        1. ngrok is a cross-platform tool that creates secure tunnels from your local machine to the internet.
+        2. It allows you to expose a local web server (running on localhost) to the outside world via a public URL
+        3. It’s a tunneling / reverse proxy service.
+        4. Supports HTTP, HTTPS, TCP, TLS tunnels
+        5. One Liner - ngrok is a tunneling service that exposes local applications to the internet using secure public URLs, commonly used for webhook testing, client demos, and quick development sharing.
+
+    JavaScript package managers
+        1. JavaScript package managers used to install, manage, version, and run dependencies in JS projects. e.g NPM, PNPM, YARN
+
+        | Feature                  |  npm                |  yarn              |  pnpm                    |
+        | ------------------------ | ------------------- | ------------------ | -------------------------|
+        | Maintained by            | npm, Inc.           | Meta (Facebook)    | Open-source community    |
+        | Comes with Node.js       |   Yes               |   No               |   No                     |
+        | Default package manager  |   Yes               |   No               |   No                     |
+        | Install speed            | Medium              | Fast               |  Fastest                 |
+        | Disk usage               |   High              |   High             |    Very Low              |
+        | Dependency storage       | Copies per project  | Copies per project |  Global store + symlinks |
+        | `node_modules` structure | Flat / nested       | Flat               |  Strict, symlinked       |
+        | Phantom dependencies     |   Possible          |   Possible         |    Prevented             |
+        | Lock file                | `package-lock.json` | `yarn.lock`        | `pnpm-lock.yaml`         |
+        | Deterministic installs   |   Yes               |   Yes              |    Yes (strict)          |
+        | Monorepo support         | Basic (workspaces)  | Strong             |  Best-in-class           |
+        | Workspace support        |   Yes               |   Yes              |    Yes                   |
+        | Peer dependency handling | Loose               | Medium             |  Strict                  |
+        | CI performance           | Medium              | Fast               |  Fastest                 |
+        | Caching                  | Basic               | Advanced           |  Highly optimized        |
+        | Offline install          |   Limited           |   Yes              |   Yes                    |
+        | Learning curve           | Low                 | Medium             | Medium                   |
+
+        
+        | Task               | npm                   | yarn                  | pnpm                |
+        | ------------------ | --------------------- | --------------------- | ------------------- |
+        | Install deps       | `npm install`         | `yarn`                | `pnpm install`      |
+        | Add dependency     | `npm i react`         | `yarn add react`      | `pnpm add react`    |
+        | Add dev dependency | `npm i -D vite`       | `yarn add -D vite`    | `pnpm add -D vite`  |
+        | Remove dependency  | `npm uninstall react` | `yarn remove react`   | `pnpm remove react` |
+        | Run script         | `npm run dev`         | `yarn dev`            | `pnpm dev`          |
+        | Global install     | `npm i -g pkg`        | `yarn global add pkg` | `pnpm add -g pkg`   |
+
+    GraphQL
+        GraphQL is a query language for APIs and a runtime that allows clients to request exactly the data they need
+        We can use the GraphQL using Apollo client
+        Is GraphQL a database? - No. It’s a query language for APIs, not storage
+        
+        Why Not REST
+            Over-fetching
+            Under-fetching
+            Multiple endpoints
+            API versioning headaches.
+        
+        Core GraphQL Building Blocks
+            Schema (The Contract) - The schema defines what data is available, Single source of truth, Strongly typed
+            Queries (Read data)
+            Mutations (Write data)
+            Subscriptions (Real-time) - Uses WebSockets, Live updates (chat, notifications)
+            Resolvers (Where Logic Lives) - Resolvers map schema → actual data.
+        
+        Execution Flow
+            Client sends query
+            Schema validates query
+            Resolvers execute
+            Response matches query shape
+            Errors returned with partial data
+        
+        Caching
+            GraphQL does not cache by default.
+            Caching options:
+                Client caching (Apollo, Relay)
+                CDN with persisted queries
+                Field-level caching
+                Response normalization
+        
+        Advantages
+            Precise data fetching
+            Fewer network requests
+            Strong typing
+            Excellent developer experience
+            Ideal for frontend-heavy apps
+            Great for mobile & slow networks
+        
+        Disadvantages
+            Complex server setup
+            Harder caching at HTTP level
+            Query cost abuse (DoS risk)
+            Overkill for simple CRUD
+            Requires strict schema discipline
+
+---------------------------------------------------------------------------
+Redux + Zustand
+---------------------------------------------------------------------------
+
+    A predictable, centralized state container for JavaScript apps where state is immutable and updated via actions and reducers
+    It manages the global state in a single place and makes state changes predictable.
+    Works well with React but can be used with other frameworks too.
+    * In Redux ToolKit Slice = Action + Reducer
+    * Everything is traceable — every state change has an action, every action is logged in DevTools with a before/after diff. This is Redux's biggest strength for large apps.
+
+    Core Concepts
+        1. Store -> Central object that holds the entire application state. Only one store per app is recommended.
+            e.g 
+                import { createStore } from 'redux';
+                const store = createStore(reducer);
+
+        2. Action -> Plain JavaScript object describing what happened. Must have a type field.
+            e.g { type: 'INCREMENT' }
+
+        3. Reducer -> Pure function that takes previous state and action, returns new state.
+            e.g
+                const counterReducer = (state = 0, action) => {
+                    switch(action.type){
+                        case 'INCREMENT': return state + 1;
+                        case 'DECREMENT': return state - 1;
+                        default: return state;
+                    }   
+                }
+
+
+        4. 4. Dispatch -> Method to send an action to the store. / the only way to trigger a state change 
+            e.g store.dispatch({ type: 'INCREMENT' });
+
+        5. Selectors -> Functions to extract specific state from the store.
+            e.g const count = store.getState().counter;
+
+    Difference
+        1. Redux Thunk & Redux saga
+
+            | Feature / Aspect   | Redux Thunk                            | Redux Saga                                    |
+            | ------------------ | -------------------------------------- | --------------------------------------------- |
+            |   Type             | Middleware that allows async functions | Middleware using generator functions          |
+            |   Complexity       | Easy, simple setup                     | More complex, steep learning curve            |
+            |   Use Case         | Simple async tasks (API calls)         | Complex async flows (retry, cancel, debounce) |
+            |   Code Style       | Async/await or promises                | Generator functions (`yield`)                 |
+            |   Boilerplate      | Less                                   | More                                          |
+            |   Performance      | Fine for small/medium apps             | Better for large-scale apps with heavy async  |
+            |   Learning Curve   | Low                                    | High                                          |
+            |   Community        | More common in small/medium apps       | Preferred in enterprise-level apps            |
+
+        2. Redux & Zustand
+
+            | Aspect             | Redux Toolkit                                                              | Zustand                                                |
+            | -------------------| -------------------------------------------------------------------------- | ------------------------------------------------------ |
+            | Setup              | `configureStore` + `<Provider>` wrapper + typed hooks setup                | Single `create()` call, no Provider needed             |
+            | Boilerplate        | Structured: slices, reducers, actions (auto-generated but organized)       | Minimal: state + actions in one function               |
+            | Update Pattern     | `dispatch(actionCreator(payload))`                                         | Call functions directly: `store.addTodo()`             |
+            | Async Handling     | `createAsyncThunk` (pending/fulfilled/rejected) or middleware (thunk/saga) | Just use `async/await` inside actions                  |
+            | DevTools           | Built-in, excellent time-travel debugging                                  | Via middleware, good but lighter                       |
+            | Persistence        | Requires external library (redux-persist)                                  | Built-in `persist` middleware                          |
+            | Immer Support      | Built-in automatically                                                     | Optional via middleware                                |
+            | Bundle Size        | ~11KB (RTK) + ~2KB (react-redux)                                           | ~1.1KB                                                 |
+            | Store Structure    | Single global store (recommended pattern)                                  | Multiple independent stores encouraged                 |
+            | TypeScript         | Good, but requires typed hooks setup                                       | Excellent inference out of the box                     |
+            | Next.js App Router | Requires `"use client"` Provider at root                                   | Only components using the hook need `"use client"`     |
+            | Best For           | Large teams, strict architecture, complex async flows                      | Most apps, fast development, simplicity-first projects |
+
+    Zustand
+        Zustand is a minimal, unopinionated state management library. No providers, no boilerplate, no reducers. You create a store with a single function and use it directly as a hook.
+
+---------------------------------------------------------------------------
+Next JS
+---------------------------------------------------------------------------
+    
+    Next.js is a React framework that provides hybrid rendering (SSR, SSG, ISR, CSR), file-based routing, API routes, and
+    built-in optimizations like image handling. Compared to CRA, it’s SEO-friendly, faster in production, and
+    more feature-rich, making it ideal for modern web apps
+
+    The Next.js Compiler, written in Rust 
+    Compilation using the Next.js Compiler is 17x faster than Babel and enabled by default since Next.js version 12.
+
+    <Image /> component → automatic resizing, lazy loading, WebP.
+    Link prefetching (<Link />) for fast navigation.
+    You can create backend endpoints inside pages/api/ . Eliminates need for a separate backend in small apps
+    How to setup Nextjs app => npx create-next-app@latest
+
+    Routing
+        In Next.js, routes are created from the file/folder structure instead of manually configuring a router
+        Every file inside the pages/ or app/ (App Router, Next 13+) folder automatically becomes a route
+        
+        1. Pages router
+            pages/
+            ┣ index.js     → /
+            ┣ about.js     → /about
+            ┗ blog/
+                ┣ index.js  → /blog
+                ┗ [id].js   → /blog/:id
+
+        2. App router
+            built on React Server Components (RSC)
+            app/
+            ┣ page.js           → /
+            ┣ about/
+            ┃   ┗ page.js       → /about
+            ┗ blog/
+                ┣ page.js       → /blog
+                ┗ [id]/
+                    ┗ page.js   → /blog/:id
+
+    Dynamic Routing
+        Dynamic routing allows you to create pages whose paths depend on dynamic data (like user IDs, slugs, product names). 
+        Instead of hardcoding /products/1, /products/2
+
+        1. Dynamic Segment
+            1. Matches a single param
+            1. File/Folder: pages/products/[id].js
+            1. URL: /products/1 or /products/abc
+            1. e.g
+                    const router = useRouter();
+                    const { id } = router.query;
+
+
+        2. Catch-All Segment
+            1. Matches multiple segments.
+            1. File/Folder: pages/docs/[...slug].js
+            1. URL: /docs/nextjs/routing → slug = ["nextjs", "routing"]
+            1. e.g
+                    const router = useRouter();
+                    const { slug } = router.query;
+                    return <h1>Docs Path: {slug?.join(" / ")}</h1>;
+        
+        3. Optional Catch-All Segment
+            1. Makes the slug optional.
+            1. File/Folder: pages/blog/[[...slug]].js
+            1. URL: /docs → slug = undefined
+            1. URL: /docs/nextjs/routing → slug = ["nextjs", "routing"]
+            1. e.g 
+                    const { slug } = useRouter().query;
+                    if (!slug) return <h1>Blog Home</h1>;
+                    return <h1>Blog Path: {slug.join(" / ")}</h1>;
+
+    Rendering Modes
+        CSR (Client-Side Rendering) → Standard React behavior.
+        SSR (Server-Side Rendering) → HTML generated per request on the server.
+        SSG (Static Site Generation) → HTML pre-rendered at build time.
+        ISR (Incremental Static Regeneration) → Static pages updated at runtime without full rebuild.
+        
+        (SSR) getServerSideProps → Runs on each request, great for dashboards or real-time data.
+        (SSG) getStaticPaths → Used with dynamic routes to pre-generate paths at build time.
+        (ISR) getStaticProps → Fetch data at build time, great for static pages.
+
+        Difference between fallback: false, true, and blocking in getStaticPaths.
+        Answer:
+            false: Only paths returned at build time exist. Others → 404.
+            true: Non-prebuilt paths render a fallback first, then load data client-side.
+            blocking: User waits until page is fully generated server-side (no fallback UI).
+
+    Rendering Methods
+        1. CSR (Client Side Rendering) Default React way
+            1. In CSR, the browser downloads a mostly empty HTML file (just a <div id="root"></div> and some script tags).
+            2. Then, the React JavaScript bundle runs on the client, builds the DOM, and renders the UI.
+            3. All routing, rendering, and state updates happen inside the browser after the JS loads
+            4. When to use CSR
+                User-specific dashboards (requires auth cookie/token).
+                Pages that don’t need SEO (e.g., admin tools).
+                Highly dynamic pages where pre-rendering doesn’t make sense.
+
+        2. SSR (Server Side Rendering)
+            1. In SSR, the HTML for a page is generated on the server for each request.
+            2. The browser gets a fully rendered HTML document immediately (better for SEO & faster “first paint”), then React hydrates it for interactivity.
+            3. In Next.js, you implement SSR with getServerSideProps.
+            4. getServerSideProps runs only on the server → It never runs in the browser.
+            5. You can’t use browser-only APIs (like window) inside getServerSideProps
+            6. Flow of SSR
+                User requests /products/1.
+                Next.js calls getServerSideProps on the server.
+                Data is fetched (e.g., from DB or API).
+                Server generates HTML with that data and sends it to the client
+
+                e.g 
+                    export async function getServerSideProps({ params }) {
+                        const res = await fetch(`https://fakestoreapi.com/products/${params.id}`);
+                        const product = await res.json();
+                        return { props: { initialProduct: product } };
+                    }
+
+        3. SSG (Static Site Generation) - Think of it like: "Bake the HTML once, serve it many times.
+            1. Next.js generates the HTML at build time, not at request time (SSR) or in the browser (CSR).
+            2. Pages are served as static files (super fast + CDN cacheable).
+            3. After HTML is delivered, React hydrates the page for interactivity
+            4. You must use getStaticPaths, not getServerSideProps.
+            5. getStaticPaths is mandatory for dynamic routes with SSG.
+            6. Flow of SSG
+                You run <next build>
+                Next.js executes getStaticPaths (and optionally getStaticProps).
+                HTML + JSON are generated and stored as static files.
+                When a user visits the page, CDN serves the prebuilt file instantly
+
+            getStaticPaths → Tells Next.js which dynamic routes to generate at build time   .
+            getStaticProps → Tells Next.js how to fetch data at build time for a single page.
+
+        4. ISR (Incremental Static Regeneration) - SSG with auto-refresh.
+            1. It allows you to update static pages after the site has been built, without doing a full rebuild/redeploy.
+            2. Pages are pre-rendered at build time like SSG, but Next.js can re-generate them in the background when new requests come in
+            3. How ISR Works
+                At build time → page is generated with getStaticPaths.
+                When a user visits the page, Next.js serves the cached static HTML.
+                After a set interval (revalidate), the next request will trigger a regeneration in the background.
+            4. e.g
+                    export async function getStaticProps({ params }) {
+                        const res = await fetch(`https://fakestoreapi.com/products/${params.id}`);
+                        const product = await res.json();
+
+                        return {
+                            props: { product },
+                            revalidate: 60, // <-- ISR: re-generate page every 60 seconds
+                        };
+                    }
+
+        5. SWR (stale-while-revalidate)
+            1. SWR is a React data fetching hook (useSWR) created by Vercel
+            2. It implements the HTTP stale-while-revalidate caching strategy:
+                Show cached data instantly (stale).
+                Re-fetch fresh data in the background (revalidate).
+                Update UI automatically when fresh data arrives
+
+    Server Components vs Client Components
+        What can't you do in a Server Component?
+            Server Components run only on the server and send zero JavaScript to the client. Therefore you cannot:
+            useState — no state management (no interactivity)
+            useEffect / useLayoutEffect — no lifecycle effects (no DOM)
+            Event handlers — no onClick, onChange, onSubmit, etc.
+            Browser APIs — no window, document, localStorage, navigator, IntersectionObserver, etc.
+            Custom hooks that depend on state or effects
+            React Context (consuming context via useContext) — though you can create a provider and pass it in a Client Component
+        What you CAN do 
+            async/await, direct database queries, file system access, server-only secrets, zero-bundle-cost imports.
+
+    Can a Server Component render a Client Component?
+        Yes. This is the standard pattern. A Server Component imports and renders a Client Component
+        code
+            // ServerComponent.tsx (Server Component)
+            import ClientButton from "./ClientButton"; // has "use client"
+
+            export default async function ServerComponent() {
+            const data = await fetchData();
+                return (
+                    <div>
+                        <h1>{data.title}</h1>
+                        <ClientButton /> {/* Perfectly fine */}
+                    </div>
+                );
+            }  
+
+    Can a Client Component render a Server Component
+        Yes, but only via composition (children prop or any React node prop). You cannot import a Server Component directly into a Client Component — that would force it to become a Client Component.
+        code
+            // ClientWrapper.tsx
+            "use client";
+            export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+                const [open, setOpen] = useState(false);
+                return <div>{open && children}</div>; // children can be a Server Component
+            }
+
+            // page.tsx (Server Component)
+            import ClientWrapper from "./ClientWrapper";
+            import ServerContent from "./ServerContent"; // Server Component
+
+            export default function Page() {
+                return (
+                    <ClientWrapper>
+                        <ServerContent /> {/* Rendered on server, passed as children */}
+                    </ClientWrapper>
+                );
+            }
+
+    What is "use client" directive actually doing?
+        1. use client" is a module boundary marker. It tells the bundler: "this module (and everything it imports) is the entry point into the client component graph.
+        2. What it actually does
+            Marks a serialization boundary — everything above this boundary runs on the server, everything at and below runs on the client.
+            The bundler creates a client bundle chunk starting from this file.
+            When a Server Component references this module, it doesn't inline the code — it emits a reference (a placeholder) that the client runtime resolves and hydrates.
+            It does not mean the component is "client-side rendered only" — Client Components are still pre-rendered on the server (SSR'd to HTML) and then hydrated on the client with interactivity.
+
+    searchParams
+        Why prefer searchParams in Server Components?
+            Better for SEO
+            Server-side data fetching
+            No client bundle increase
+            No hydration mismatch
+            Cleaner separation of concerns
+
+        | Server Component            | Client Component         |
+        | --------------------------- | ------------------------ |
+        | Gets `searchParams` as prop | Uses `useSearchParams()` |
+        | Runs on server              | Runs in browser          |
+        | Triggers server re-render   | Updates reactively       |
+        | Good for data fetching      | Good for UI state        |
+
+
+    Differences
+        Next.js - Create React App
+
+            | Feature              | CRA (Create React App) | Next.js                                     |
+            | -------------------- | ---------------------- | ------------------------------------------- |
+            |   Rendering          | Only CSR               | SSR, SSG, ISR, CSR                          |
+            |   Routing            | Needs react-router     | Built-in file system routing                |
+            |   SEO                | Poor (CSR only)        | Great (SSR/SSG/ISR)                         |
+            |   Performance        | Basic                  | Image optimization, code splitting, caching |
+            |   API Support        | No                     | Yes (API routes)                            |
+            |   Production Ready   | Needs setup            | Out-of-the-box                              |
+            |   Deployment         | Manual                 | Vercel 1-click, others supported            |
+
+        App Router - Pages Router
+
+            | Feature                            | Pages Router (`pages/`)                                  | App Router (`app/`)                                                  |
+            | ---------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
+            |   Route Definition                 | Each `.js`/`.tsx` file = route                           | Each folder with `page.js` = route                                   |
+            |   Dynamic Routes                   | `[id].js` → `/blog/123`                                  | `[id]/page.js` → `/blog/123`                                         |
+            |   Data Fetching                    | `getStaticProps`, `getServerSideProps`, `getStaticPaths` | Async `fetch()` in Server Components (no `get Props`)                |because it is by default server compo
+            |   Layouts                          | `_app.js`, `_document.js` (global only)                  | `layout.js` per folder → supports nested layouts                     |
+            |   Default Component Type           | Client Components (React as usual)                       | Server Components by default (`"use client"` needed for hooks/state) |
+            |   Navigation                       | `<Link>` (needs `<a>` in old versions, fixed later)      | `<Link>` simplified, built for streaming                             |
+            |   Streaming / Suspense             | Not supported                                            | Built-in support (React Suspense + streaming)                        |
+            |   Parallel Routes & Interception   |  Not available                                           |  Supported (advanced routing patterns)                               |
+            |   Stability                        | Mature, stable                                           | Newer (still evolving, Next.js 13+)                                  |
+
+---------------------------------------------------------------------------
+Build the React apk using 2 files
+---------------------------------------------------------------------------
+
+    index.html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Minimal React App</title>
+
+            <!-- React and ReactDOM from CDN -->
+            <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+            <!-- Babel for JSX support -->
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        </head>
+        <body>
+            <div id="root"></div>
+
+            <!-- Your JS file -->
+            <script type="text/babel" src="app.js"></script>
+        </body>
+        </html>
+
+    app.js
+        function App() {
+        const [count, setCount] = React.useState(0);
+
+            return (
+                <div style={{ fontFamily: 'sans-serif', textAlign: 'center', marginTop: '50px' }}>
+                    <h1>Hello, React without a build system!</h1>
+                    <p>Count: {count}</p>
+                    <button onClick={() => setCount(count + 1)}>Increment</button>
+                </div>
+            );
+        }
+
+        // React 18 style render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // React 16 & 17 style render // Does not support concurrent rendering.
+        ReactDOM.render(<App />, document.getElementById('root'));
+
+---------------------------------------------------------------------------
+
+What to Talk in Frontend Rounds
+    1. how I decide SSR vs CSR
+    2. my performance budget checklist
+    3. my feature flag rollout
+    4. Optimizations of code and components, Lazy Loading
+    5. Role Management
+    6. URl whitelsting and Special Character whitelisting for security
+    7. Internationalization for Websites for More user base over world 
+    8. Assests managements
+    9. Unit / Dev Testing
+    10. Mentoring and collaborate with team for prod Bugs, Doubts and Optimization of codes 
+    11. Version and RollOut decisions for Releases. Branching name strategies for Feature, Canary, Rollback Changes
+
+---------------------------------------------------------------------------
+
+What is the Current LTS version of 
+    Node 
+    Npm 
+    React 
+    ECMA 
+    NextJs
+
+What are the features in the New versions.
+How will you migrate the 
+    React -> Next 
+    Pages Router -> App Router
+
+How to track Performance  :
+    Chrome DevTools
+    Lighthouse
+    Web Vitals
+    bundle analyzers
+    image optimization
+
+How to Monitoring/Analytics  :
+    Sentry
+    LogRocket
+    Datadog RUM
+    OpenTelemetry (basic)
+    GA4
+
+How to make SEO/Metadata  :
+    sitemaps
+    robots.txt
+    Open Graph/Twitter cards
+    JSON-LD structured data
+
+What are the base liabrary to make the app faster
+    UI Libraries
+    Forms/Validation
+    State/Data
+    Internationalization

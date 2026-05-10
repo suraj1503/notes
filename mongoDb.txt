@@ -1,0 +1,391 @@
+# MongoDB Interview Notes
+
+
+MongoDB:
+    - MongoDB is a NoSQL, document-oriented database.
+    - Stores data in BSON documents instead of rows and tables.
+    - Schema is flexible (schema-less).
+    - Designed for:
+        * High scalability
+        * High performance
+        * Distributed systems
+
+    - Best suited for:
+        * Real-time applications
+        * Analytics systems
+        * Microservices
+        * Event-driven architectures
+
+Difference Between SQL and MongoDB:
+    - SQL databases are relational.
+    - MongoDB is document-oriented.
+
+    - SQL:
+        * Tables
+        * Rows
+        * Fixed schema
+        * JOIN-heavy
+
+    - MongoDB:
+        * Collections
+        * Documents
+        * Flexible schema
+        * Denormalized
+
+    - Scaling:
+        * SQL → Vertical scaling
+        * MongoDB → Horizontal scaling
+
+BSON:
+    - BSON stands for Binary JSON.
+    - Internal storage format used by MongoDB.
+    - Optimized binary representation of JSON.
+
+    - Supports:
+        * Date
+        * ObjectId
+        * Binary
+        * Decimal128
+        * Arrays
+        * Nested objects
+
+    - Advantages:
+        * Faster parsing
+        * Efficient storage
+        * Rich datatype support
+
+ObjectId:
+    - Default unique identifier in MongoDB.
+
+    - Example:
+        ObjectId("507f1f77bcf86cd799439011")
+
+    - 12-byte structure:
+        * 4 bytes → timestamp
+        * 5 bytes → machine/process info
+        * 3 bytes → increment counter
+
+    - Properties:
+        * Globally unique
+        * Time sortable
+        * Automatically generated
+
+Collections vs Documents:
+    - Collection:
+        * Similar to SQL table
+        * Stores multiple documents
+
+    - Document:
+        * Similar to SQL row
+        * BSON object
+
+    - Example:
+        {
+            name: "Vikas",
+            age: 25
+        }
+
+Indexing:
+    - Indexing improves query performance.
+    - Avoids full collection scans.
+    - MongoDB indexes internally use B+ Trees.
+
+    - Without index:
+        COLLSCAN → O(n)
+
+    - With index:
+        IXSCAN → O(log n)
+
+    - Internally:
+        * Separate B-Tree structures created
+        * Stores:
+            Indexed value + document pointer
+
+    - Example:
+        db.users.createIndex({
+            email: 1
+        })
+
+    - Types:
+        * Single-field index
+        * Compound index
+        * Multikey index
+        * Text index
+        * TTL index
+        * Hashed index
+
+    - Important:
+        * More indexes improve reads
+        * More indexes slow writes
+
+Compound Index:
+    - Compound index contains multiple fields.
+
+    - Example:
+        db.orders.createIndex({
+            userId: 1,
+            createdAt: -1
+        })
+
+    - Used for:
+        * Filtering
+        * Sorting
+        * Range queries
+
+    - Prefix Rule:
+        A → B → C
+
+        Supports:
+            * A
+            * A + B
+            * A + B + C
+
+        Does NOT support efficiently:
+            * B alone
+            * C alone
+
+    - ESR Rule:
+        Equality → Sort → Range
+
+Why Index Not Used:
+    - Reasons:
+        * Wrong field order
+        * Low selectivity
+        * Query mismatch
+        * Collection scan cheaper
+        * Regex inefficiency
+        * Small collection size
+
+    - Example:
+        Index:
+            {
+                userId: 1,
+                createdAt: -1
+            }
+
+        Query:
+            {
+                createdAt: {
+                    $gt: date
+                }
+            }
+
+        - Query skips prefix field.
+        - Index becomes inefficient.
+
+Aggregation Pipeline:
+    - Aggregation pipeline processes documents through multiple stages.
+    - Each stage transforms output from previous stage.
+
+    - Flow:
+        Input
+            ↓
+        Stage 1
+            ↓
+        Stage 2
+            ↓
+        Output
+
+    - Example:
+        db.orders.aggregate([
+            {
+                $match: {
+                    status: "completed"
+                }
+            },
+            {
+                $group: {
+                    _id: "$userId",
+                    total: {
+                        $sum: "$amount"
+                    }
+                }
+            }
+        ])
+
+    - Important stages:
+        * $match
+        * $group
+        * $project
+        * $sort
+        * $lookup
+        * $unwind
+        * $limit
+        * $skip
+
+Embedding vs Referencing:
+    - Embedding:
+        * Stores nested documents together
+
+        - Example:
+            {
+                name: "Vikas",
+                orders: [
+                    {
+                        product: "Laptop"
+                    }
+                ]
+            }
+
+        - Best for:
+            * One-to-few relationships
+            * Frequently accessed together
+            * Atomic updates
+
+    - Referencing:
+        * Stores related data separately
+
+        - Example:
+            {
+                userId: ObjectId("...")
+            }
+
+        - Best for:
+            * Large relationships
+            * Independent updates
+            * Shared data
+
+Replica Set:
+    - Replica set provides:
+        * High availability
+        * Redundancy
+        * Automatic failover
+
+    - Contains:
+        * Primary node
+        * Secondary nodes
+
+Sharding:
+    - Sharding is horizontal scaling in MongoDB.
+    - Data distributed across multiple servers.
+
+    - Components:
+        * Shards
+        * Config servers
+        * Mongos router
+
+Shard Key:
+    - Shard key determines data distribution across shards.
+
+    - Good shard key:
+        * High cardinality
+        * Even distribution
+        * Avoid hotspots
+
+    - Bad shard key:
+        timestamp
+
+Transactions:
+    - MongoDB supports ACID transactions.
+    - Implemented using sessions.
+
+    - Example:
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
+
+        try {
+            await session.commitTransaction();
+        } catch(err) {
+            await session.abortTransaction();
+        }
+
+MongoDB vs PostgreSQL:
+    - MongoDB:
+        * NoSQL
+        * Flexible schema
+        * Easy horizontal scaling
+        * Denormalized
+
+    - PostgreSQL:
+        * Relational
+        * Strict schema
+        * Strong ACID
+        * JOIN optimized
+
+When NOT to Use MongoDB:
+    - Avoid MongoDB for:
+        * Complex joins
+        * Heavy relational modeling
+        * Financial systems
+        * Strict ACID-heavy workloads
+        * Highly normalized systems
+
+MongoDB Interview Questions & Answers:
+        * Middleware
+
+Q10. What is Replica Set?
+    - Provides:
+        * High availability
+        * Automatic failover
+        * Redundancy
+
+    - Contains:
+        * Primary node
+        * Secondary nodes
+
+Q11. What is Sharding?
+    - Horizontal scaling in MongoDB.
+    - Distributes data across multiple servers.
+
+Q12. Explain Compound Index.
+    - Compound index contains multiple fields.
+
+    - Example:
+        db.orders.createIndex({
+            userId: 1,
+            createdAt: -1
+        })
+
+    - Follows Prefix Rule.
+
+Q13. How optimize MongoDB queries?
+    - Use proper indexes.
+    - Follow ESR Rule.
+    - Use explain().
+    - Optimize schema design.
+    - Reduce large document growth.
+
+Q14. Why index not used?
+    - Wrong field order
+    - Low selectivity
+    - Query mismatch
+    - Collection scan cheaper
+
+Q15. How scale MongoDB?
+    - Vertical scaling
+    - Horizontal scaling using sharding
+    - Replica sets
+
+Q16. What is Shard Key?
+    - Determines data distribution across shards.
+
+    - Good shard key:
+        * High cardinality
+        * Even distribution
+        * Avoid hotspots
+
+Q17. How prevent large document issues?
+    - Avoid unbounded arrays.
+    - Use referencing.
+    - Use GridFS for large files.
+    - Use pagination.
+
+Q18. How handle transactions?
+    - MongoDB supports ACID transactions.
+    - Uses sessions.
+
+Q19. MongoDB vs PostgreSQL?
+    - MongoDB:
+        * Flexible schema
+        * Better horizontal scaling
+
+    - PostgreSQL:
+        * Strong relational integrity
+        * Better JOIN support
+
+Q20. When NOT to use MongoDB?
+    - Complex joins
+    - Financial systems
+    - Highly normalized systems
+    - Strict ACID-heavy workloads
