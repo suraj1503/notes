@@ -1,11 +1,51 @@
+Json Web Token:
+    - A JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties. 
+        Each JWT contains an encoded header, payload, and signature.
+    - Structure: [Base64(Header)][.][Base64(Payload)][.][Signature] 
+        1. Header: { "alg": "HS256", "typ": "JWT" }
+            - The header typically consists of two parts — the token type (JWT) and the signing algorithm being used, 
+                    such as HMAC SHA256 or RSA. 
+        2. Payload: { "id": 1, "name": "John Doe", "iat": 1715402838 }
+            - The payload contains the "claims", which is information about the user and other data.
+                Claims can be of three types: 
+                    * Registered Claims: Claims that are predefined and have no commercial value. Examples: iss, exp, sub, aud, iat, etc.
+                    * Public Claims: Claims that are registered by the JWT, but are not standardized. Examples: user_id, role, etc.
+                    * Private Claims: Claims that are custom-defined by the users and have no commercial value. Examples: user_id, role, etc.
+        3. Signature: <HMACSHA256_SIGNATURE>
+            - To create the signature part, you need to take the encoded header, encoded payload, a secret, and the algorithm 
+                specified in the header, then sign that with the secret. The signature is used to verify that the sender 
+                of the JWT is who it says it is and to ensure that the message wasn’t changed along the way.
+    
+    - Advanages of JWT:
+        * Stateless: JWTs store information in the token itself, so the server doesn’t need to store any session data.
+        * Compact: JWTs are small and can be easily transmitted in URLs, query parameters, or HTTP headers.
+        * Scalable: JWTs can be used in distributed systems, allowing for horizontal scaling of authentication.
+        * Secure: JWTs are signed using cryptography, ensuring that the token hasn’t been tampered with.
+        * Flexible: JWTs can be used to store custom claims, allowing for flexible authentication and authorization.
+        * Mobile and API friendly: Ideal for mobile apps and APIs where state management can be challenging.
+        * Scalability: Supports cross-domain authentication and simplifies load balancing in distributed systems.
+    
+    - Disadvanages of JWT:
+        * Storage of sensitive information is not recommended as JWT is Base64 encoded and can be easily decoded.
+        * JWT is stateless, so we cannot revoke the token before its expiry.
+        * JWT can be larger than sessions as it contains claims.
+        * JWT is vulnerable to replay attacks if not properly secured.
+
+    - Best Practices for JWT Implementation:
+        * Secure Storage: Store JWTs in HTTP-only cookies to prevent access from JavaScript, reducing the risk of XSS attacks.
+        * Token Expiration: Set a reasonable expiration time on JWTs to limit the time window for potential misuse.
+        * Token Revocation: Have a mechanism to revoke or blacklist compromised tokens to enhance security.
+        * Use HTTPS: Ensure that all communications between the client and server use HTTPS to prevent eavesdropping and man-in-the-middle attacks.
+        * Don’t Store Sensitive Data: Avoid storing sensitive data in the JWT payload, as the payload is easily readable once base64-decoded.
+ 
 Difference between Session and JWT:
     | Concept                              | Session (Stateful)                                                | Token / JWT (Stateless)                                                                               |
-    | ------------------------------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+    | ------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
     | Who stores data?                 | Server (memory/Redis/DB)                                          | Client (token itself holds data)                                                                      |
     | What client has?                 | `sessionId` (just a reference)                                    | Full identity inside token (payload)                                                                  |
     | Frontend request (how it’s sent) | Browser automatically sends cookie:<br>`Cookie: sessionId=abc123` | Usually sent manually:<br>`Authorization: Bearer <token>`<br>OR via cookie:<br>`Cookie: token=abc123` |
     | Backend processing               | Looks up session store → fetch user                               | Verifies token signature → extracts user                                                              |
-    | DB lookup needed?                | ✅ Yes (to fetch session/user)                                     | ❌ No (unless extra validation needed)                                                                 |
+    | DB lookup needed?                | ✅ Yes (to fetch session/user)                                     | No (unless extra validation needed)                                                                 |
     | State management                 | Stateful (server remembers users)                                 | Stateless (server doesn’t store user state)                                                           |
     | Scalability                      | ❌ Hard (needs shared store like Redis)                            | ✅ Easy (no shared state needed)                                                                       |
     | Performance                      | Slightly slower (DB/cache lookup)                                 | Faster (just verify token)                                                                            |

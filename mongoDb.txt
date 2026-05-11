@@ -1,6 +1,5 @@
 # MongoDB Interview Notes
 
-
 MongoDB:
     - MongoDB is a NoSQL, document-oriented database.
     - Stores data in BSON documents instead of rows and tables.

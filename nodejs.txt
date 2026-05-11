@@ -85,7 +85,6 @@ Phases in Event Loop:  (and each phases has there on queue)
         - Sometimes output can vary based on I/O operations (poll phase callbacks).
         - (if ,poll phase is delayed because of some heavy I/O operation) has immediate callback and before that I have immediate callback then check phase execution skips poll phase.
 
-
 Key concept to know before learning cluster, worker_threads, child_process:
     #CPU and Core (Hardware Level):
         - CPU (Processor):
