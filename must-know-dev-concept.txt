@@ -73,6 +73,9 @@ Difference between Session and JWT:
             5. Server:
                 → finds session in Redis/DB
                 → gets user
+            6. Delete session when:
+                → User logs out → delete session from server
+                → Server deletes the session when the user is inactive for a long time
 
         - Token-Based Flow:
             Case 1: Token in Header (most common in APIs)
@@ -83,6 +86,9 @@ Difference between Session and JWT:
                 4. Server:
                     → verifies token
                     → extracts user
+                5. Delete token when:
+                    → User logs out → delete token from server
+                    → Server deletes the token when the user is inactive for a long time
 
             Case 2: Token in Cookie (like your setup)
                 1. Login → server sets cookie:
@@ -92,6 +98,10 @@ Difference between Session and JWT:
                     Cookie: token=abc123 (auto)
                 4. Server:
                     → verifies token
+                    → extracts user
+                5. Delete token when:
+                    → User logs out → delete token from server
+                    → Server deletes the token when the user is inactive for a long time
 
         - Modern apps use: JWT (short-lived) + Refresh Token + HttpOnly Cookie + CSRF
 
@@ -110,6 +120,9 @@ Difference between Session and JWT:
             → Issues new accessToken
         9. Browser updates cookie
         10. Frontend retries original request → success
+        11. Delete token when:
+            → User logs out → delete token from server
+            → Server deletes the token when the user is inactive for a long time
 
 CSRF (Cross-Site Request Forgery): 
     - An attacker tricks a logged-in user’s browser into making a request without their consent
@@ -143,6 +156,28 @@ CSRF (Cross-Site Request Forgery):
             ✔ CSRF token matches
         8. Request allowed ✅
     - One liner flow: Login → Get Cookie → Get CSRF Token → Send both → Server validates
+
+OAuth 2.0:
+    - It is delegation of authorization
+    - OAuth is authorization framework
+    - OAuth is not authentication protocol
+    - It allows user to grant limited access to their data to a third-party application without sharing their credentials.
+    - Four roles:
+        1. Resource Owner: (End User)
+        2. Client: (Third-party application)
+        3. Authorization Server: (Identity provider, like Google, Facebook)
+        4. Resource Server: (API server that hosts the protected data)
+    - Roles explained with example (Login via Google):
+        1. Resource Owner: You (the user)
+        2. Client: The app you want to log into (e.g., Spotify)
+        3. Authorization Server: Google (manages your Google identity)
+        4. Resource Server: Google's user profile API (/me)
+    - Oauth Flow: Authorization Code Grant Flow:
+        1. User → Clicks "Login with Google"
+        2. App redirects to Google → User logs in → Grants permission
+        3. Google sends code to App
+        4. App exchanges code for tokens (accessToken, refreshToken)
+        5. App uses accessToken to access user data
 
 Browser Storage Comparison (Full Table):
     | Feature                     | 🍪 Cookies                                  | 💾 LocalStorage                    | 🪟 SessionStorage          |
@@ -480,3 +515,132 @@ Polling, Long Polling and Websockets:
         | Complexity           | Easy                     | Medium                  | Hard                    |
         | Overhead             | High (headers each time) | Medium                  | Low                     |
         | Use case             | Simple apps              | Chat (older systems)    | Chat, live apps, gaming |
+
+Concurrency vs Parallelism:
+    # Concurrency: 
+        - Handling multiple things at once
+        - Not necessarily executing at the same time
+        - Example: single-core CPU switching between processes (time-sharing)
+        - Context Switching happens
+    # Parallelism: 
+        - Doing multiple things at the same time
+        - Requires multiple cores/processors
+        - Example: multi-core CPU running multiple processes simultaneously
+        - Context Switching does not happen
+
+    # Difference:   
+        | Feature              | Concurrency             | Parallelism              |
+        | -------------------- | ----------------------- | ------------------------ |
+        | Execution            | Interleaved             | Simultaneous             |
+        | Number of Processors | Single                  | Multiple                 |
+        | Task Switching       | Yes                     | No                       |
+        | Performance          | Lower                   | Higher                   |
+        | Example              | Single-threaded (Node)  | Multi-threaded (Java)    |
+    
+Caching & Invalidation:
+    - Caching is a technique of storing the result of expensive operations in memory so that subsequent requests can be served faster.
+    - Advantage: 
+        - Faster response times
+        - Reduced server load
+        - Reduced network traffic
+    - Disadvantage:
+        - Data can become stale
+        - Cache invalidation can be complex
+        - Cache can become a single point of failure
+    - Types: 
+        # Client-side caching:
+            - defination: caching of data in the client's browser or device
+            - Example: 
+                // browser cache
+                <img src="image.jpg" cache-control="max-age=3600">
+
+               // service workers
+                const CACHE_NAME = 'my-app-cache-v1';
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((cachedResponse) => {
+                            return cachedResponse || fetch(event.request);
+                        })
+                    );
+                }); 
+        # Server-side caching: (IMPORTANT)
+            - defination: caching of data in the server's memory or storage
+            - Example: 
+                // in-memory cache
+                const cache = new Map();
+                cache.set('users', [{id: 1, name: 'John'}, {id: 2, name: 'Jane'}]);
+                console.log(cache.get('users'));
+
+                // Redis cache
+                const redis = require('redis');
+                const client = redis.createClient();
+                client.set('users', JSON.stringify([{id: 1, name: 'John'}, {id: 2, name: 'Jane'}]));
+                console.log(JSON.parse(client.get('users')));
+        # CDN caching:
+            - defination: caching of data in the geographically distributed servers around the world
+            - Example: 
+                // cloudflare
+                <img src="image.jpg" cache-control="max-age=3600">
+
+                // netlify
+                const CACHE_NAME = 'my-app-cache-v1';
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((cachedResponse) => {
+                            return cachedResponse || fetch(event.request);
+                        })
+                    );
+                }); 
+        # Database caching:
+            - defination: caching of data in the database
+            - Types of database caching: 
+                1. query result cache
+                2. Buffer Pool: MySQL InnoDB, PostgreSQL shared buffers
+                3. Indexing
+        # CPU caching: 
+            - defination: caching of data in the CPU
+            - Example: 
+                // L1 cache
+                // L2 cache
+                // L3 cache
+                
+    - Invalidation: 
+        - Invalidation is the process of removing stale or expired data from the cache.
+        - Time-based invalidation (cache entry expires after a certain time)
+        - Manual invalidation (explicitly removing cache entries)
+        - Event-driven invalidation (cache entry is removed when the underlying data changes)
+
+Soft Lock (Reversible Checkpoint) & Hard Lock (Final & Irreversible):
+    - Soft Lock: 
+        * Temporary, modifiable lock before final database closure.
+        * Allows minor corrections and last-minute reviews.
+        * Ensures all discrepancies are resolved before finalization.
+        * Can be unlocked if critical issues arise.
+        * Example: A missing lab value is identified. Since the database is in Soft Lock, the issue can be fixed.
+
+    - Hard Lock (Final & Irreversible):
+        * Permanent, no modifications allowed.
+        * Data is frozen for statistical analysis & regulatory submission.
+        * Ensures compliance with FDA, EMA, and other authorities.
+        * No changes—even for critical errors.
+        * Example: Post-Hard Lock, an adverse event misclassification is found—but it's too late to correct it.
+
+Rate Limiting:
+    - Rate limiting is the process of limiting the number of requests that can be made to a server in a given time period.
+    - Why Rate Limiting? 
+        * Protect against brute-force attacks
+        * Prevent resource exhaustion
+        * Ensure fair usage among users
+        * Control API costs
+    - Methods of Rate Limiting:
+        1. Token Bucket Algorithm:
+            * 
+        2. Leaky Bucket Algorithm:
+            * 
+        3. Fixed Window Counter:
+            * 
+        4. Sliding Window Log:
+            * 
+        5. Sliding Window Counter: 
+
+Forward

@@ -1,0 +1,285 @@
+Redis:
+    - Redis (Remote Dictionary Server) is an in-memory data structure store used as a database, 
+      cache, and message broker, known for its high performance and low latency.
+    - MySQL → stores data on disk (slower)
+    - Redis → stores data in memory (very fast)
+    - Why Redis is FAST:
+        1. In-Memory Storage:
+            * Data is stored in RAM
+            * No disk I/O → no waiting → ultra-fast reads/writes
+        2. Single-Threaded Event Loop:
+            * Redis uses one main thread to process commands
+            * No thread switching, no locking overhead
+            * It handles multiple clients using non-blocking I/O (event-driven model)
+        3. I/O Multiplexing:
+            * Use system calls like epoll, select, or kqueue to monitor multiple client connections with a single thread.
+        4. Optimized Data Structures:
+            * Strings, Lists, Hashes, Sets, Sorted Sets, Bitmaps, HyperLogLogs, Geospatial indexes 
+    - What Can Redis Be Used As:
+        1. In-Memory Cache: Store frequently accessed data to reduce database load
+        2. Session Store: Store user session data for fast retrieval
+        3. Message Broker: Publish/Subscribe messaging between services
+        4. Rate Limiting: Track request counts per user/IP
+        5. Real-time Leaderboards: Use sorted sets for ranking
+        6. Queues: Implement background job queues
+        7. Pub/Sub: Real-time notifications and chat applications
+        8. Geospatial Data: Store and query location-based data
+    - When to Use:
+        * Ultra-fast reads/writes
+        * Temporary or frequently accessed data
+        * Real-time features
+        * High scalability
+    - When Not to Use:
+        * When data must always persist safely (use DB like MySQL)
+        * When dataset is larger than memory
+        * For complex relational queries
+
+Redis Data Types:
+    1. Strings:
+        * Redis strings are binary-safe and can store up to 512MB per value
+        * Simple text or binary data
+        * Value can be: String, integer, float, binary, JSON
+        * Command: SET, GET, INCR, DECR, APPEND 
+        * Complexity: O(1)
+        * Use Case: Caching(API response), counters(view, likes), session store
+        * Example:
+            SET user:1:name "John Doe"  # Set string
+            GET user:1:name             # Get string
+            INCR user:1:view  # Increment counter
+    2. Lists:
+        * Ordered collections of strings
+        * Allows insertion from both ends
+        * Command: LPUSH, RPUSH, LPOP, RPOP, LRANGE, LTRIM 
+        * Complexity: O(1) for LPOP/RPUSH/LPUSH/RPUSH, O(n) for LRANGE/LTRIM
+        * Use Case: Timelines, notification queues, rate-limiting
+        * Example:
+            LPUSH notifications:user:1 "Login successful"  # Push to left
+            RPUSH notifications:user:1 "New message"  # Push to right
+            LRANGE notifications:user:1 0 4  # Get first 5 notifications
+    3. Sets:
+        * Unordered collections of unique strings
+        * Fast O(1) insertion, deletion, and membership testing
+        * No duplicates allowed
+        * Command: SADD, SMEMBERS, SISMEMBER, SREM, SUNION, SINTER 
+        * Complexity: O(1) for SADD/SMEMBERS/SISMEMBER/SREM, O(n) for S$UNION/SINTER
+        * Use Case: Unique visitors tracking, tagging systems, recommendation engines
+        * Example:
+            SADD users:online "user:1"  # Add user to online set
+            SADD users:online "user:2"  # Add another user (duplicate ignored)
+            SMEMBERS users:online  # Get all online users
+            SISMEMBER users:online "user:1"  # Check if user is online
+    4. Ordered Sets (Sorted Sets):
+        * Similar to sets but with scores
+        * Elements are ordered by score
+        * Command: ZADD, ZRANGE, ZREVRANGE, ZRANK, ZSCORE, ZREM 
+        * Complexity: O(1) for ZADD/ZRANK/ZSCORE/ZREM, O(n) for ZRANGE/ZREVRANGE
+        * Use Case: Leaderboards, ranking systems, rate-limiting
+        * Example:
+            ZADD leaderboard "user:1" 100  # Add user to leaderboard
+            ZADD leaderboard "user:2" 200  # Add another user (different score)
+            ZRANGE leaderboard 0 4  # Get first 5 users
+            ZREVRANGE leaderboard 0 4  # Get first 5 users (descending order) 
+    5. Hash (Hashes):
+        * Collections of field-value pairs
+        * Similar to objects or dictionaries
+        * Command: HSET, HGET, HMSET, HMGET, HGETALL, HDEL 
+        * Complexity: O(1) for HSET/HGET/HMSET/HMGET/HDEL, O(n) for HGETALL
+        * Use Case: Storing objects, user profiles, caching
+        * Example:
+            HSET user:1 name "John Doe" age 30 email "[EMAIL_ADDRESS]"  # Set hash
+            HGET user:1 name  # Get field value
+            HGETALL user:1  # Get all field values
+
+Redis Internals:
+    - Redis is fast because of its in-memory design, single-threaded event loop, 
+      non-blocking I/O, and optimized internal data structures.
+    1. Single-Threaded Architecture:
+        - Redis uses one main thread to process all commands
+        - No multiple threads handling requests
+        - Because multi-threading introduces: Locks, race conditions, context switching overhead
+        - No Locks → No waiting → No overhead → Very Fast
+        - But single-threaded so can't use multiple CPU cores
+        - Can handle 100K+ operations per second on a single core (sufficient for 99% use cases)
+    2. Event Loop (Core Engine):
+        - Redis uses an event loop (similar to Node.js)
+        - Flow:
+            a. Accept request
+            b. Queue the request
+            c. Process the request(one by one from queue)
+            d. Send response
+    3. I/O Multiplexing:
+        - Redis uses I/O multiplexing to handle multiple client connections with a single thread.
+        - Technologies used: epoll(Linux), select(macOS/Linux), kqueue(FreeBSD)
+        - Instead of: 1 thread per client (like MySQL) → 1 thread for 1000's of clients (Redis)
+    4. Memory Storage (RAM-Based):
+        - All data stored in RAM, not on disk
+        - Disk used only for persistence (optional)
+    5. Persistence:
+        - Redis is in-memory — but what if server crashes?
+        - Redis offers two persistence options:
+            a. RDB (Redis Database): 
+                - Redis takes snapshot of data at intervals
+                - Saves all data into a .rdb file
+                - Example: Every 1 hour or every 1000 updates
+                - Pros:
+                    - Faster backups
+                    - Smaller file size
+                - Cons:
+                    - Some data loss between snapshots
+            b. AOF (Append-Only File):
+                - Logs every write command
+                - Example: SET user:1 "Suraj" → Appended to file
+                - Pros:
+                    - Better durability (no data loss between snapshots)
+                - Cons:
+                    - Files grow larger over time
+            c. Hybrid (RDB + AOF):
+                - Use both RDB snapshots + AOF logs
+                - Best of both worlds - good durability + smaller files
+    6. Memory Optimization:
+        - Compact encoding:
+            - For small strings, Redis uses packed arrays instead of objects
+            - Reduces memory usage significantly
+        - Object reuse:
+            - Reuses string objects when possible
+            - Avoids creating new objects for same values
+        - Automatic eviction policies:
+            - LFU(Least Frequently Used)
+            - LRU(Least Recently Used)
+            - FIFO(First In First Out)
+
+Redis Caching patterns:
+    1. Cache-aside pattern (Lazy Loading):
+        - Cache-aside loads data into cache only when needed and is the most commonly used caching strategy.
+        - Flow:
+            1. Application checks cache
+            2. If hit, return from cache
+            3. If miss, fetch from DB and populate cache
+            4. Return from cache
+        - Pros: Simple to implement, only cache what's used
+        - Cons: Cache miss → slower first request, Risk of stale data
+        - Use case: Suitable for read-heavy applications with high cache hit rates
+        - Example:
+            def get_product(product_id):
+                # 1. Check cache first
+                cache_data = redis.get(f"product:{product_id}")
+                if cache_data:
+                    return cache_data  # Cache hit
+
+                # 2. Cache miss — fetch from DB
+                product = db.query(Product).filter_by(id=product_id).first()
+
+                # 3. Populate cache for next time
+                if product:
+                    redis.set(f"product:{product_id}", product, ex=3600)
+                return product  
+    2. Write-through pattern:
+        - Write-through ensures strong consistency by updating cache and database together.
+        - Flow:
+            1. Application writes to cache
+            2. Cache updates database immediately
+            3. Return from cache
+        - Pros: Data is always consistent in cache and DB
+        - Cons: Write operations are slower
+        - Use case: Suitable for applications requiring strong consistency between cache and DB
+        - Example:
+            def update_product(product_id, data):
+                # 1. Update cache first
+                redis.set(f"product:{product_id}", data, ex=3600)
+
+                # 2. Update DB
+                product = db.query(Product).filter_by(id=product_id).first()
+                if product:
+                    product.update(data)
+                    db.commit()
+                return True  
+    3. Write-back pattern (Lazy write):
+        - Write-back is optimized for write performance by updating cache first and database later.
+        - Flow:
+            1. Application writes to cache
+            2. Cache updates database later (asynchronously)
+            3. Return from cache
+        - Pros: Write operations are very fast, High throughput
+        - Cons: Risk of data loss if cache fails before writing to DB
+        - Use case: Suitable for write-heavy applications where performance is critical
+        - Example: 
+            def update_product(product_id, data):
+                # 1. Update cache first
+                redis.set(f"product:{product_id}", data, ex=3600)
+
+                # 2. Update DB later (asynchronously)
+                # This can be done using a background job or message queue
+                async_update_db(product_id, data)
+
+                return True  
+    4. Write-around pattern:
+        - Write-around pattern is used when data is written to the database first and then cached.
+        - Flow:
+            1. Application writes to database
+            2. Cache is updated later (asynchronously)
+            3. Return from cache
+        - Pros: Data is always consistent in cache and DB
+        - Cons: Write operations are slower
+        - Use case: Suitable for applications requiring strong consistency between cache and DB
+        - Example: 
+            def update_product(product_id, data):
+                # 1. Update DB first
+                product = db.query(Product).filter_by(id=product_id).first()
+                if product:
+                    product.update(data)
+                    db.commit()
+
+                # 2. Cache is updated later (asynchronously)
+                # This can be done using a background job or message queue
+                async_update_cache(product_id, data)
+
+                return True 
+    5. Read-through pattern:
+        - Read-through pattern is used when data is read from the cache first and then database if needed.
+        - Unlike Cache-aside pattern, In read-through pattern the cache is responsible for fetching the data from the database.
+        - No manual intervention is required to update the cache or fetch data from DB.
+        - Flow:
+            1. Application reads from cache
+            2. If cache miss, fetch from DB and populate cache
+            3. Return from cache
+        - Pros: Data is always consistent in cache and DB
+        - Cons: Cache miss → slower first request
+        - Use case: Suitable for applications requiring strong consistency between cache and DB
+    #Problems:
+        1. Cache stampede (Thundering Herd):
+            - This problem occurs when a cache key expires and multiple requests for the same key arrive at the same time.
+            - All requests miss the cache and fetch data from the database, causing a surge in database load.
+            - This can lead to a temporary slowdown or even a crash of the database.
+            - Solution:
+                - Add random TTL jitter to prevent simultaneous expiration of keys.
+                - Implement a distributed locking mechanism to ensure only one request updates the cache at a time.
+                - Use a cache warming strategy to proactively refresh popular keys before they expire.
+        2. Stale data:
+            - This problem occurs when the data in the cache is not in sync with the data in the database.
+            - This can happen due to various reasons such as concurrent updates, cache failures, or network issues.
+            - This can lead to incorrect data being served to the users.
+            - Solution: Use TTL (Time to Live), delete cache on update or write-through pattern 
+        
+Redis Replication, Sentinel & Clustering:
+    1. Replication:
+        - Copying data from one Redis server to other Redis servers.
+        - master or primary : master instance handles all writes
+        - slave or replica : slave instances replicate data from master
+        - High Availability: If master crashes, slave can be promoted to master.
+        - Read Scalability: Heavy reads distributed across replicas
+        - Data Durability: Data is replicated to multiple servers, so if one server fails, data is not lost
+        - Backup: Replicas contain same data
+        - Asynchronous Replication: Replica may lag slightly behind master
+    2. Redis Sentinel (Automatic Failover):
+        - Redis Sentinel provides high availability through monitoring and automatic failover.
+        - Problem Without Sentinel: Master-slave replication works well, but if master crashes, manual intervention is required to promote a slave to master. 
+          This can cause significant downtime and data loss.
+        - Solution: Redis Sentinel is a distributed system that monitors Redis master and slave instances and automatically fails over to a replica if the master crashes.
+        - How it works:
+            - Sentinels monitor master and slave instances
+            - If master crashes, sentinels elect a new master from the slaves
+            - New master is promoted to master
+            - New master is replicated to other slaves
+    3. Redis Cluster (Horizontal Scaling):
+        -
+            

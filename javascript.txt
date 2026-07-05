@@ -1,0 +1,355 @@
+#What is JavaScript?
+    - JavaScript is a high-level, interpreted programming language. 
+    - It is primarily known for its role in web development, where it is used to create dynamic and interactive content.   
+    - It is a scripting language that can be run on both the client-side (in web browsers) and the server-side (using environments like Node.js).
+
+#History of JavaScript:
+    - JavaScript was created by Brendan Eich in 1995 while working at Netscape Communications Corporation.
+    - It was initially developed as a scripting language for the Netscape Navigator web browser.
+    - It was first released in September 1995 as LiveScript, and later renamed to JavaScript.
+
+#How JavaScript Works?
+    - JavaScript is an interpreted language, which means it is executed line by line by an interpreter rather than being compiled into machine code beforehand.
+
+#How JavaScript is run?
+    1. Web Browser (Client-Side): JavaScript code is embedded in HTML pages and executed by the browser's JavaScript engine (e.g., V8 in Chrome, SpiderMonkey in Firefox).
+    2. Server-Side: JavaScript can be run on servers using environments like Node.js, which provides a runtime for executing JavaScript outside the browser.
+    3. Other Environments: JavaScript can also be run in various other environments, such as mobile apps (React Native), desktop apps (Electron), and more.
+
+#Hoisting:
+    - Hoisting: 
+    - Hoisting is the registration of variables and functions in memory during the creation phase of execution context.
+    - Functions declared using `function` keyword are hoisted entirely (both name and body).
+    - `var` variables are hoisted but initialized with `undefined`.
+    - `let` and `const` are hoisted but kept in a "Temporal Dead Zone" (TDZ), so they cannot be accessed before declaration.
+
+#Execution Context:
+    - Execution context is a container where JavaScript code is evaluated and executed. 
+    - It has two main components: 
+        1. Memory Component: Stores variables and functions.
+        2. Code Component: Stores the code to be executed.
+    - Creation Phase & Execution Phase:
+        1. Creation Phase: 
+            - Hoisting of variables and functions.
+            - Creation of scope chain.
+        2. Execution Phase:
+            - Execution of code.
+            - Creation of execution stack.
+
+#Execution Stack (Call Stack) (IMPORTANT):
+    - Execution stack is a data structure that stores the execution context of the program.
+    - It follows the Last-In-First-Out (LIFO) principle.
+    - It is used to keep track of the function calls and their execution.
+
+#Scope:
+    - Scope is the region of the program where the variables are accessible.
+    - Types of scope:
+        1. Global Scope
+        2. Function Scope
+        3. Block Scope
+        4. Lexical Scope
+    - Global Scope: Variables declared outside of any function or block are in the global scope. They can be accessed from anywhere in the program.
+        - Example: 
+            const x = 10;
+            function outer() {
+                function inner() {
+                    console.log(x);
+                }
+                inner();
+            }
+            outer();
+    - Function Scope: Variables declared inside a function are in the function scope. They can only be accessed from within that function.
+        - Example: 
+            function outer() {
+                const x = 10;
+                function inner() {
+                    console.log(x);
+                }
+                inner();
+            }
+            outer();
+    - Block Scope: Variables declared inside a block are in the block scope. They can only be accessed from within that block.
+        - Example: 
+            function outer() {
+                const x = 10;
+                function inner() {
+                    console.log(x);
+                }
+                inner();
+            }
+            outer();
+    - Lexical Scope: Lexical scope is the scope of a variable based on its position in the code. 
+        - Example: 
+            function outer() {
+                const x = 10;
+                function inner() {
+                    console.log(x);
+                }
+                inner();
+            }
+            outer();
+
+#Closures (IMPORTANT):
+    - A closure is a function that has access to its outer function's variables even after the outer function has returned.
+    - Example: 
+        function outer() {
+            const x = 10;
+            function inner() {
+                console.log(x);
+            }
+            return inner;
+        }
+        const myFunc = outer();
+        myFunc();
+        
+    - Lexical Scoping + Closure = Closure
+    
+#Precendence & Associativity:
+    - Precendence:
+        * Precendence determines the order in which operators are evaluated in an expression.
+        * Example:
+            console.log(10 + 5 * 3); # outputs 25 because '*' has higher precedence than '+', so it evaluates as 10 + (5 * 3).
+
+    - Associativity: 
+        * Associativity determines the order in which operators of the same precedence are evaluated in an expression.
+        * Example:
+            console.log(10 ** 3 ** 2) # outputs 1000 because '**' is right-associative, so it evaluates as 10 ** (3 ** 2).
+
+#Type Conversion & Coercion:
+    - Type Conversion: The explicit process of converting a value from one data type to another. 
+        - Example: 
+            String(value) → Converts to String
+            Number(value) → Converts to Number
+            Boolean(value) → Converts to Boolean
+            Object(value) → Converts to Object
+    - Coercion: The automatic process of converting a value from one data type to another, performed by the JavaScript engine. 
+        - Example:
+            console.log(10 + "5"); // outputs "105" because the number 10 is coerced to a string.
+            console.log(10 + true); // outputs 11 because true is coerced to 1
+  
+#Call by Value and Call by Reference
+    - In JavaScript, all primitive types (number, string, boolean, null, undefined, symbol, bigint) are passed by value.
+    - In JavaScript, all objects (including arrays and functions) are passed by reference.
+    
+#this Keyword:
+    - this keyword is a special keyword in JavaScript that refers to the current object.
+    - The value of this keyword depends on how the function is called.
+    - this is bind with function call, not function definition. 
+    - Examples:
+        1. Simple function call:
+            function show() {
+                console.log(this);
+            }
+            show();
+        2. Object method call:
+            const obj = {
+                name: "John",
+                show: function() {
+                    console.log(this);
+                }
+            };
+            obj.show();
+        3. Arrow function:
+            const obj = {
+                name: "John",
+                show: () => {
+                    console.log(this);
+                }
+            };
+            obj.show();
+        4. Constructor function call:
+            function Person(name) {
+                this.name = name;
+            }
+            const person = new Person("John");
+            console.log(person);
+        5. Event handler call:
+            const button = document.getElementById("myButton");
+            button.addEventListener("click", function() {
+                console.log(this);
+            });
+    - Note: Arrow functions do not have their own `this`. They lexically inherit `this` from the surrounding scope. 
+
+#Functions:
+    - Functions are first class citizens in javascript.
+    - Functions are objects.
+    - Functions can be passed as arguments to other functions.
+    - Functions can be returned from other functions.
+    - Functions can be assigned to variables. 
+    - Functions are objects because they can have properties and methods.
+                   FUNCTION OBJECT
+            ┌─────────────────────────────────────┐
+            │ name                                │
+            │ code                                │
+            │ parameters                          │
+            │ prototype                           │
+            │ call()                              │
+            │ apply()                             │
+            │ bind()                              │
+            └─────────────────────────────────────┘
+                            │
+                            ▼ 
+                    Function Invocation
+                            │
+                            ▼
+                    EXECUTION CONTEXT CREATED
+            ┌─────────────────────────────────────┐
+            │ this                                │
+            │ arguments                           │
+            │ local variables                     │
+            │ scope chain                         │
+            └─────────────────────────────────────┘
+
+#call, apply, bind: 
+    * bind:
+        - creates new function with this value and arguments
+        - Example: 
+            const obj = { name: "John" };
+            function greet() {
+                console.log(this.name)
+            }
+            const boundGreet = greet.bind(obj);
+            boundGreet();
+    
+    * call:
+        - calls the function with the specified `this` value and arguments.
+        - Example: 
+            const obj = { name: "John" };
+            function greet(greeting) {
+                console.log(greeting + ", " + this.name)
+            }
+            greet.call(obj, "Hello");
+    
+    * apply:
+        - calls the function with the specified `this` value and arguments.
+        - Example: 
+            const obj = { name: "John" };
+            function greet(greeting) {
+                console.log(greeting + ", " + this.name)
+            }
+            greet.apply(obj, ["Hello"]);
+    * difference b/w call, apply, bind:
+        - call → call function with `this` value and arguments
+        - apply → call function with `this` value and arguments
+        - bind → return new function with `this` value and arguments
+
+#Currying:
+    - Currying is a technique in functional programming where a function that takes multiple arguments
+    - is transformed into a sequence of functions that each take a single argument.
+    - Example: 
+        function add(a) {
+            return function(b) {
+                return function(c) {
+                    return a + b + c;
+                }
+            }
+        }
+        console.log(add(1)(2)(3));
+    
+    - Example:
+        
+#Borrowing:
+    - Borrowing is a technique in functional programming where a function can be called on an object
+    - that is not its own.
+    - Example: 
+        function greet() {
+            console.log(this.name)
+        }
+        const obj = { name: "John" };
+        greet.call(obj);
+
+#Generator Function:
+    - Generator functions are special types of functions that can be paused and resumed. 
+    - They are defined using the `function*` syntax and can use the `yield` keyword to pause execution and return a value.
+    - Example: 
+        function* generator() {
+            yield 1;
+            yield 2;
+            yield 3;
+        }
+        const gen = generator();
+        console.log(gen.next());
+        console.log(gen.next());
+        console.log(gen.next());
+        
+#Prototypes:
+    - Prototype is an object that is associated with every function and object in JavaScript
+    - It is used to inherit properties and methods from one object to another
+    - Example: 
+        function Person(name) {
+            this.name = name;
+        }
+        Person.prototype.sayHello = function() {
+            console.log("Hello, my name is " + this.name);
+        };
+        const person = new Person("John");
+        person.sayHello();
+
+#Function Constructors:
+    - Function constructors are functions that are used to create objects
+    - Example: 
+        function Person(name) {
+            this.name = name;
+        }
+        const person = new Person("John");
+        console.log(person);
+
+#var,let,const:
+    -  var:
+        * scoped to the function
+        * can be redeclared
+        * can be reassigned
+        * has hoisting
+    
+    - let:
+        * scoped to the block
+        * cannot be redeclared
+        * can be reassigned
+        * has hoisting
+    
+    - const:
+        * scoped to the block
+        * cannot be redeclared
+        * cannot be reassigned
+        * has hoisting
+
+#Array Methods:
+    - map: 
+        * callback (value, index, array)
+        * returns new array
+        * Example:
+            const numbers = [1, 2, 3, 4, 5];
+            const doubledNumbers = numbers.map(number => number * 2);
+            console.log(doubledNumbers);  // Output: [2, 4, 6, 8, 10]
+    
+    - filter:
+        * callback (value, index, array)
+        * returns new array
+        * Example:
+            const numbers = [1, 2, 3, 4, 5];
+            const doubledNumbers = numbers.filter(number => number * 2);
+            console.log(doubledNumbers);  // Output: [2, 4, 6, 8, 10]
+            
+    - reduce:
+        * callback (accumulator, currentValue, currentIndex, array)
+        * returns accumulator
+        * Example:
+            const numbers = [1, 2, 3, 4, 5];
+            const sum = numbers.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+            console.log(sum);  // Output: 15
+            
+    - forEach:
+        * callback (value, index, array)
+        * returns undefined
+        * Example:
+            const numbers = [1, 2, 3, 4, 5];
+            numbers.forEach(number => console.log(number));
+                
+#Objects:
+    - Objects are collection of key-value pairs
+    - Example: 
+        const person = {
+            name: "John",
+            age: 30,
+            city: "New York"
+        };

@@ -13,6 +13,28 @@ libuv: (IMPORTANT)
     # Note:
         - UV_THREADPOOL_SIZE=16 (to set size of thread pool and do that in environment variable) 
 
+Phases in Event Loop:  (and each phases has there on queue)
+    #1. Timers → Checks if it’s time for setInterval / setTimeout
+        - It has a queue for timers (setTimeout, setInterval)
+    #2. Pending Callbacks → executes I/O callbacks deferred to the next loop iteration
+        - It has a queue for pending callbacks (I/O callbacks deferred to the next loop iteration)
+    #3. Idle, Prepare → Internal Node.js use only
+        - It has a queue for idle, prepare (Internal Node.js use only)
+    #4. Poll → Reads I/O events (network, file system)
+        - It has a queue for poll events (I/O events)
+    #5. Check → Executes setImmediate
+        - It has a queue for check events (setImmediate)
+    #6. Close → Handles close events
+        - It has a queue for close events (close events)
+
+    Note:
+        - "Poll" phase is the "main" phase.
+        - complete phase 1 round is called as 1 cycle / 1 tick
+        - before every phases of event loop, it executes microtasks (like process.nextTick, promise.then)..
+        - The event loop keeps running as long as there are active timers, I/O operations, or event listeners.
+        - Sometimes output can vary based on I/O operations (poll phase callbacks).
+        - (if ,poll phase is delayed because of some heavy I/O operation) has immediate callback and before that I have immediate callback then check phase execution skips poll phase.
+
 Error handling:
     - Error handling in asynchronous callbacks is a technique
     - where errors are passed as the first argument to the callback function,
@@ -32,7 +54,7 @@ Error handling:
 
 Event Emitter:
     - EventEmitter is a class in Node.js that enables event-driven programming. 
-      It allows objects to emit events and other parts of the program to listen and react to those events.
+    - It allows objects to emit events and other parts of the program to listen and react to those events.
     - It follows the publish–subscribe (pub/sub) pattern:
         Emitter → publishes event
         Listener → subscribes to event
@@ -45,8 +67,70 @@ Event Emitter:
         });
         // emitter (publisher)
         emitter.emit('greet', 'Suraj');
-    - 
 
+Buffer class: (IMPORTANT)
+    - Buffer is a raw memory allocation, outside the V8 heap.
+    - Buffer is used to store binary data.
+    - In Node.js, everything is a string, but sometimes you need to work with raw binary data.
+    - Buffer is fixed-size. Once created, you cannot change their size. (IMPORTANT)
+    - Buffer is faster than strings because they are stored in contiguous memory locations. (IMPORTANT)
+    - Buffer can store:
+        * Strings
+        * Integers
+        * Floating-point numbers
+        * Binary data
+    - Buffers are used for: 
+        * I/O operations
+        * Network programming
+        * File manipulation
+        * Database interactions
+    - Example:
+        //create buffer from string
+        const buffer = Buffer.from("Hello");
+        console.log(buffer);  // Output: <Buffer 48 65 6c 6c 6f>
+
+        const buffer = Buffer.alloc(5);  // creates empty buffer of size 5
+        buffer.write("Hello");
+        console.log(buffer);  // Output: <Buffer 48 65 6c 6c 6f>
+
+Streams
+    - Streams are objects that let you read data from a source or write data to a destination in a continuous flow.
+    - Important: 
+        - A stream is a sequence of data that is processed in chunks.
+        - A chunk is a small piece of data that is processed at a time.
+        - Streams in Node.js are instances of EventEmitter.
+        - Nodes.js use Buffer class internally to store data in chunks.
+    - Types: 
+        * Readable streams: 
+            - defination: a stream from which you can only read data
+        * Writable streams: 
+            - defination: a stream into which you can only write data
+        * Duplex streams: 
+            - defination: a stream from which you can both read and write data
+        * Transform streams: 
+            - defination: a stream that transforms data as it is read or written
+    - Backpressure and HighWaterMark:
+        - HighWaterMark is the amount of data that can be read from a stream at a time.
+        - Readable Stream: highWaterMark = "When should I stop reading more data?"
+        - Writable Stream: highWaterMark = "When should I stop accepting data?"
+        - Backpressure is a situation where the rate of data being produced by a source is greater 
+            than the rate of data being consumed by a destination. (When backpressure happens, 
+            the readable stream will pause emitting 'data' events until the writable stream 
+            catches up and signals that it's ready for more data.)
+        - In Node.js, backpressure is handled by the pipe() method. (NOT ALWAYS)
+    - Pipe() method: 
+        - The pipe() method is used to pipe the data from a readable stream to a writable stream.
+        - It is a more efficient way to handle large amounts of data because it does not load the entire file into memory at once.
+        - Example:
+            const fs = require("fs");
+            const readableStream = fs.createReadStream("file.txt");
+            const writableStream = fs.createWriteStream("file.txt");
+            readableStream.pipe(writableStream); 
+    - Relation between Buffer and Stream:
+        - A stream reads data in chunks.
+        - Each chunk is stored in a Buffer.
+        - Buffers are then processed by the stream.
+    
 EventDriven Architecture (EDA):
     - Event-Driven Architecture (EDA) is a distributed system design pattern where services communicate by producing and consuming events, instead of calling each other directly (like REST).
     - Node.js fits this well because it uses an event-driven model—events are emitted, and listeners react asynchronously.
@@ -68,22 +152,6 @@ EventDriven Architecture (EDA):
             console.log("Received chunk:", ++i);
         });
         console.log("stream: ", i);
-
-Phases in Event Loop:  (and each phases has there on queue)
-    #1. Timers → Checks if it’s time for setInterval / setTimeout
-    #2. Pending Callbacks → executes I/O callbacks deferred to the next loop iteration
-    #3. Idle, Prepare → Internal Node.js use only
-    #4. Poll → Reads I/O events (network, file system)
-    #5. Check → Executes setImmediate
-    #6. Close → Handles close events
-
-    Note:
-        - "Poll" phase is the "main" phase.
-        - complete phase 1 round is called as 1 cycle / 1 tick
-        - before every phases of event loop, it executes microtasks (like process.nextTick, promise.then)..
-        - The event loop keeps running as long as there are active timers, I/O operations, or event listeners.
-        - Sometimes output can vary based on I/O operations (poll phase callbacks).
-        - (if ,poll phase is delayed because of some heavy I/O operation) has immediate callback and before that I have immediate callback then check phase execution skips poll phase.
 
 Key concept to know before learning cluster, worker_threads, child_process:
     #CPU and Core (Hardware Level):
@@ -285,97 +353,84 @@ Promises:
 
     - Types of Promise Static Methods:
         * Promise.resolve():
-            Returns a resolved promise.
+            - Returns a resolved promise.
 
         * Promise.reject():
-            Returns a rejected promise.
+            - Returns a rejected promise.
 
         * Promise.all():
-            Runs multiple promises in parallel.
-            Fails immediately if ANY promise fails.
-            Returns array of results if all succeed.
+            - Runs multiple promises in parallel.
+            - Fails immediately if ANY promise fails.
+            - Returns array of results if all succeed.
             Use it when Independent promises i.e any promise failed the whole operation should fail.
         
         * Promise.race():
-            Returns result of the FIRST promise that settles (resolve OR reject).
-            If fastest one rejects → race rejects.
+            - Returns result of the FIRST promise that settles (resolve OR reject).
+            - If fastest one rejects → race rejects.
+            - Example (code Snippet): Timeout handling
+                - Example scenario:
+                    - API should respond within 2 seconds
+                    - If not → cancel and show timeout error
 
-            Eg (code Snippet): Timeout handling
-
-            Example scenario:
-            API should respond within 2 seconds
-            If not → cancel and show timeout error
-
-            const fetchData = fetch("api/data");
-
-            const timeout = new Promise((_, reject) =>
-              setTimeout(() => reject("Request timeout"), 2000)
-            );
-
-            Promise.race([fetchData, timeout])
-              .then(res => console.log(res))
-              .catch(err => console.error(err));
+                    const fetchData = fetch("api/data");
+                    const timeout = new Promise((_, reject) =>
+                        setTimeout(() => reject("Request timeout"), 2000)
+                    );
+                    Promise.race([fetchData, timeout])
+                    .then(res => console.log(res))
+                    .catch(err => console.error(err));
 
         * Promise.allSettled():
-            Waits for ALL promises.
-            Never rejects. 
-            You want all results, even failed ones..
+            - Waits for ALL promises.
+            - Never rejects. 
+            - You want all results, even failed ones..
+            - Eg (code Snippet): You want all results, even failed ones.
+                - Example scenario:
+                    * Show partial data:
+                        * user loaded ✅
+                        * orders failed ❌
+                        * payments loaded ✅
+                        * UI still renders what’s available
 
-            Eg (code Snippet): You want all results, even failed ones.
-
-            Example scenario:
-
-            Show partial data:
-            user loaded ✅
-            orders failed ❌
-            payments loaded ✅
-            UI still renders what’s available
-
-            Promise.allSettled([
-            fetchUser(),
-            fetchOrders(),
-            fetchPayments()
-            ])
-            .then(results => {
-            results.forEach(result => {
-                if (result.status === "fulfilled") {
-                console.log("Success:", result.value);
-                } else {
-                console.log("Failed:", result.reason);
-                }
-            });
-            });
+                    Promise.allSettled([
+                        fetchUser(),
+                        fetchOrders(),
+                        fetchPayments()
+                    ]).then(results => {
+                        results.forEach(result => {
+                            if (result.status === "fulfilled") {
+                                console.log("Success:", result.value);
+                            } else {
+                                console.log("Failed:", result.reason);
+                            }
+                        });
+                    });
         
         * Promise.any():
-            Returns first SUCCESSFUL promise.
-            Ignores rejected ones.
-            Fails only if ALL fail.
+            - Returns first SUCCESSFUL promise.
+            - Ignores rejected ones.
+            - Fails only if ALL fail.
 
-            Eg. (code Snippet):
-
-            Example scenario:
-
-            Multiple APIs, use the first one that responds
-
-            const api1 = fetch("api/endpoint1");
-            const api2 = fetch("api/endpoint2");
-            const api3 = fetch("api/endpoint3");
-
-            Promise.any([api1, api2, api3])
-            .then(fastestResponse => {
-                console.log("Fastest response:", fastestResponse);
-            })
-            .catch(error => {
-                console.log("All failed:", error);
-            });
+            - Example (code Snippet):
+                - Example scenario:
+                    * Multiple APIs, use the first one that responds
+                    const api1 = fetch("api/endpoint1");
+                    const api2 = fetch("api/endpoint2");
+                    const api3 = fetch("api/endpoint3");
+                    Promise.any([api1, api2, api3])
+                    .then(fastestResponse => {
+                        console.log("Fastest response:", fastestResponse);
+                    })
+                    .catch(error => {
+                        console.log("All failed:", error);
+                    });
 
     Note: The Promise executor runs immediately (synchronously), but .then() handlers run asynchronously (in the microtask queue).
-    eg: (code Snippet):
+    - eg: (code Snippet):
         console.log("A");
-
         new Promise((resolve, reject) => {
-          console.log("B");// immediate synchronous code in the executor
-          resolve();
+            console.log("B");// immediate synchronous code in the executor
+            resolve();
         }).then(() => console.log("C"));// asynchronous (this makes code asynchronous)
 
         console.log("D");

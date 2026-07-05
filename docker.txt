@@ -1,17 +1,68 @@
 * Docker = OS-level virtualization
 * VM = Hardware-level virtualization
 
+VM
+    its a virtual machine to run multiple application on the same machine
+    the software used for this called hyperwiser (vmWare, VirtualBox)
+    you can run multiple VMs in parallel in this architecture.
+
+Problems with Traditional Virtualization
+     Very Heavy - Each VM contains a full OS
+     Slow Startup - Starting a VM means booting an entire OS. [VM boot time = 1–2 minutes]
+     High Resource Usage
+     Deployment Issues - "It works on my machine"
+
+Architecture of VM
+
+          Physical Server
+               │
+          Hypervisor (VMware / VirtualBox)
+               │
+          ┌───────────┬───────────┬───────────┐
+          │ VM 1      │ VM 2      │ VM 3      │
+          │ OS        │ OS        │ OS        │
+          │ App       │ App       │ App       │
+          └───────────┴───────────┴───────────┘
+
+Docker
+     - Docker solves these problems using containers instead of virtual machines.
+     - Docker is written in Go and runs natively on Linux.
+     - Instead of creating multiple OS, Docker shares the host OS kernel.
+     - Your NodeJS runtime does NOT come from the host machine. it came from Image runtime
+     - Why Containers Are Still Lightweight
+          * They reuse image layers
+          * They use minimal Linux distributions
+     - Why Docker Is Fast
+          * Share the same OS kernel
+          * No OS boot required
+          * Lightweight processes
+     
+     - Architecture:
+
+          Physical Server
+               │
+          Host Operating System
+               │
+          Docker Engine
+               │
+          ┌──────────┬──────────┬──────────┐
+          │Container │Container │Container │
+          │App       │App       │App       │
+          │Libraries │Libraries │Libraries │
+          └──────────┴──────────┴──────────┘
+
+
 docker ps (process status)
 
 Docker terminologies
      - Container:
-          - A container is a running isolated environment for your application.
-          - It contains: Your code, Runtime, Libraries, Dependencies, Environment configs
-          - Example
+          * A container is a running isolated environment for your application.
+          * It contains: Your code, Runtime, Libraries, Dependencies, Environment configs
+          * Example
                Suppose you built:
-                    - Node.js backend
-                    - MongoDB
-                    - Redis
+                    * Node.js backend
+                    * MongoDB
+                    * Redis
      - Image
           - A Docker image is a blueprint/template used to create containers
           - Container = Running instance
@@ -25,29 +76,50 @@ Docker terminologies
                
      - Dockerfile
           - A Dockerfile is a text file that contains instructions for building a Docker image.
-          - Example
-               Dockerfile
-               FROM node:20
-               WORKDIR /app
-               COPY package.json .
-               RUN npm install
-               COPY . .
-               EXPOSE 3000
-               CMD ["npm", "start"]
-
-          Dockerfile Instructions
+          - A Docker image is not one single file. It is built as a stack of layers.
+          - Each instruction in a Dockerfile creates a new layer
+          - Dockerfile Instructions
                - FROM        → Base image
                - WORKDIR     → Create working directory
                - COPY        → Copy files
                - RUN         → Execute commands
-               - CMD         → Start application        
-
+               - CMD         → Start application
+          - Example
+               - Dockerfile
+                    FROM node:20
+                    WORKDIR /app
+                    COPY package.json ./
+                    RUN npm install
+                    COPY . .
+                    EXPOSE 3000
+                    CMD ["npm", "start"]
+               - Bad Dockerile:
+                    FROM node:20
+                    WORKDIR /app
+                    COPY . .
+                    RUN npm install
+                    CMD ["node","server.js"]
+               - Note: Above example installs dependecny and file change, but only file is changed not dependency.
+          - Docker caches the layers
+          - How Docker Decides Whether to Use Cache
+               - The instruction in the Dockerfile
+               - The files used by that instruction (Host ka file change hua toh)
+          - Flow
+               - If both are unchanged → Docker uses the cached layer.
+               - If something changes → Docker rebuilds that layer and all layers after it.
+          - Example
+               Layer 1 → Base Image (node:20)
+               Layer 2 → WORKDIR /app
+               Layer 3 → COPY package.json
+               Layer 4 → RUN npm install
+               Layer 5 → COPY . .
+               Layer 6 → CMD
+        
      - Docker Engine:
           - Docker Engine is the core runtime that: Builds images, Runs containers, Manages networking, Manages storage. It consists of three main components:
                - Docker Daemon (dockerd): The background service that manages Docker objects (images, containers, volumes, networks).
                - Docker CLI (Docker Client): The command-line tool used to interact with the Docker daemon.
                - Docker Compose: A tool for defining and running multi-container Docker applications.
-
 
      - Docker Hub:
           - Docker Hub is a public registry for Docker images (like AppStore for Applications or GitHub for code).
@@ -184,42 +256,6 @@ commands to create a basic docker app:
         │               │               │
      Containers      Containers      Containers
 
-VM
-    its a virtual machine to run multiple application on the same machine
-    the software used for this called hyperwiser (vmWare, VirtualBox)
-    you can run multiple VMs in parallel in this architecture.
-
-Problems with Traditional Virtualization
-     Very Heavy - Each VM contains a full OS
-     Slow Startup - Starting a VM means booting an entire OS. [VM boot time = 1–2 minutes]
-     High Resource Usage
-     Deployment Issues - "It works on my machine"
-
-Architecture of VM
-
-          Physical Server
-               │
-          Hypervisor (VMware / VirtualBox)
-               │
-          ┌───────────┬───────────┬───────────┐
-          │ VM 1      │ VM 2      │ VM 3      │
-          │ OS        │ OS        │ OS        │
-          │ App       │ App       │ App       │
-          └───────────┴───────────┴───────────┘
-
-Docker
-     Docker solves these problems using containers instead of virtual machines.
-     Docker is written in Go and runs natively on Linux.
-     Instead of creating multiple OS, Docker shares the host OS kernel.
-     Docker usage the cache layer the layer is kind of lines as a single layer
-     Your NodeJS runtime does NOT come from the host machine. it came from Image runtime
-     Why Containers Are Still Lightweight
-          They reuse image layers
-          They use minimal Linux distributions
-     Why Docker Is Fast
-          Share the same OS kernel
-          No OS boot required
-          Lightweight processes
 
 MultiStage Build
      Multi-stage build lets you use multiple stages in one Dockerfile.
@@ -256,47 +292,6 @@ Docler Sworm
      Docker Swarm is a container orchestration tool built into Docker that allows you to manage multiple Docker hosts as a single cluster.
      It helps deploy, scale, and manage containers across many machines.
 
-Dockerfile
-     A Docker image is not one single file. It is built as a stack of layers.
-     Each instruction in a Dockerfile creates a new layer
-     How Docker Decides Whether to Use Cache
-          The instruction in the Dockerfile
-          The files used by that instruction (Host ka file change hua toh)
-          Flow
-               If both are unchanged → Docker uses the cached layer.
-               If something changes → Docker rebuilds that layer and all layers after it.
-
-     e.g
-          Layer 1 → Base Image (node:20)
-          Layer 2 → WORKDIR /app
-          Layer 3 → COPY package.json
-          Layer 4 → RUN npm install
-          Layer 5 → COPY . .
-          Layer 6 → CMD
-
-Architecture:
-
-          Physical Server
-               │
-          Host Operating System
-               │
-          Docker Engine
-               │
-          ┌──────────┬──────────┬──────────┐
-          │Container │Container │Container │
-          │App       │App       │App       │
-          │Libraries │Libraries │Libraries │
-          └──────────┴──────────┴──────────┘
-
-Bad Dockerile
-
-     FROM node:20
-     WORKDIR /app
-     COPY . .
-     RUN npm install
-     CMD ["node","server.js"]
-
-     Note: Above example installs dependecny and file change, but only file is changed not dependency.
 
 Docker vs Kubernetes
 

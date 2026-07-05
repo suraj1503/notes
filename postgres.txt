@@ -63,6 +63,7 @@ CRUD Operations:
             - Skip first 20 (internally it scans first 20 rows from disk) then return next 10
                 - instead we can use cursor pagination, keyset pagination
                 - Eg: SELECT * FROM users WHERE id > 100000 LIMIT 10;
+
 Joins
     - INNER JOIN (return only matching rows from both tables)
         - Eg. 
@@ -196,42 +197,42 @@ Transactions:
         - Serializable - Prevents all concurrency issues by executing transactions serially.
 
 Locks & Concurrency:
-- Postgres uses: MVCC (Multi-Version Concurrency Control)
-    - PostgreSQL uses MVCC for high concurrency by allowing readers and writers to work without blocking each other
-    - while row-level locks like FOR UPDATE are used to prevent race conditions during concurrent writes
-    - and deadlocks are automatically detected and resolved by aborting one transaction.
+    - Postgres uses: MVCC (Multi-Version Concurrency Control)
+        - PostgreSQL uses MVCC for high concurrency by allowing readers and writers to work without blocking each other
+        - while row-level locks like FOR UPDATE are used to prevent race conditions during concurrent writes
+        - and deadlocks are automatically detected and resolved by aborting one transaction.
 
-- Allows:
-   - readers not blocking writers
-   - writers not blocking readers
-- Improves:
-   - concurrency
-   - performance
-- PostgreSQL creates:
-   - multiple versions of rows
-   - each transaction sees consistent snapshot
-- Row-Level Lock:
-   - SELECT * FROM users WHERE id = 1 FOR UPDATE;
-   - locks selected row
-   - prevents concurrent updates
-- Used in:
-   - wallet systems
-   - inventory systems
-   - booking systems
-- Race Condition:
-   - multiple transactions update same data simultaneously
-   - can cause inconsistent data
-- Deadlock:
-   - transactions wait on each other
-   - PostgreSQL detects and aborts one transaction
-- Best Practices:
-   - keep transactions short
-   - access rows in same order
-   - avoid long-running locks
-- Isolation Levels:
-   - Read Committed (default)
-   - Repeatable Read
-   - Serializable
+    - Allows:
+        - readers not blocking writers
+        - writers not blocking readers
+    - Improves:
+        - concurrency
+        - performance
+    - PostgreSQL creates:
+        - multiple versions of rows
+        - each transaction sees consistent snapshot
+    - Row-Level Lock:
+        - SELECT * FROM users WHERE id = 1 FOR UPDATE;
+        - locks selected row
+        - prevents concurrent updates
+    - Used in:
+        - wallet systems
+        - inventory systems
+        - booking systems
+    - Race Condition:
+        - multiple transactions update same data simultaneously
+        - can cause inconsistent data
+    - Deadlock:
+        - transactions wait on each other
+        - PostgreSQL detects and aborts one transaction
+    - Best Practices:
+        - keep transactions short
+        - access rows in same order
+        - avoid long-running locks
+    - Isolation Levels:
+        - Read Committed (default)
+        - Repeatable Read
+        - Serializable
 
 WAL (Write-Ahead Logging):
     - WAL ensures data durability by logging all changes to disk before applying them to the database.
@@ -286,3 +287,18 @@ Normalization:
         - too many joins can slow reads
     - Denormalization:
         - intentionally duplicate data for faster reads
+
+
+
+
+Before normalization:
+StudentID | CourseID | StudentName | DeptID | DeptName
+
+After 2NF:
+Student(StudentID, StudentName, DeptID)
+Enrollment(StudentID, CourseID)
+
+After 3NF:
+Student(StudentID, StudentName, DeptID)
+Department(DeptID, DeptName)
+Enrollment(StudentID, CourseID)
