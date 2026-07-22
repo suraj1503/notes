@@ -11,9 +11,15 @@ libuv: (IMPORTANT)
     - libuv creates a thread pool (default: 4 threads)
 
     # Note:
-        - UV_THREADPOOL_SIZE=16 (to set size of thread pool and do that in environment variable) 
+        - UV_THREADPOOL_SIZE=16 (to set size of thread pool and do that in environment variable)
 
-Phases in Event Loop:  (and each phases has there on queue)
+package.json vs package.lock.json:
+    - package.json: contains dependencies
+    - package-lock.json: contains exact version of each dependency installed in project (to make sure 
+        we always install the same version of dependencies)
+    - package-lock.json is generated automatically when we install any dependency
+        
+Phases in Event Loop:  (and each phases has their on queue)
     #1. Timers → Checks if it’s time for setInterval / setTimeout
         - It has a queue for timers (setTimeout, setInterval)
     #2. Pending Callbacks → executes I/O callbacks deferred to the next loop iteration
@@ -362,12 +368,12 @@ Promises:
             - Runs multiple promises in parallel.
             - Fails immediately if ANY promise fails.
             - Returns array of results if all succeed.
-            Use it when Independent promises i.e any promise failed the whole operation should fail.
+            - Use it when Independent promises i.e any promise failed the whole operation should fail.
         
         * Promise.race():
             - Returns result of the FIRST promise that settles (resolve OR reject).
             - If fastest one rejects → race rejects.
-            - Example (code Snippet): Timeout handling
+            - Example (code Snippet): Timeout handling`
                 - Example scenario:
                     - API should respond within 2 seconds
                     - If not → cancel and show timeout error
@@ -496,4 +502,3 @@ What is GraphQL?
                 }        
 
 
-    - 
